@@ -7,8 +7,8 @@ documented false-positive fixes this same function already carries
 (per-kg/per-day rate exclusion; the Finding-32 "Disodium" word-boundary
 fix), so a future change to this logic can't silently regress any of them.
 
-No pytest in this project (see CLAUDE.md) — plain assertions + a __main__
-runner, same convention as api/test_security.py and generation/test_token_budget.py.
+No pytest in this project — plain assertions + a __main__ runner, same
+convention as api/test_security.py and generation/test_token_budget.py.
 Entirely offline — no LLM/network call, this module has none to make.
 
 Run:

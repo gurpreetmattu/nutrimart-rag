@@ -196,9 +196,8 @@ def _record_usage_lc(usage_out: list | None, call_name: str, provider: str, resp
     """
     Same entry shape as generation/gateway.py::_record_usage() (call,
     provider, prompt_tokens, completion_tokens, reasoning_tokens,
-    total_tokens) — a usage_out list populated here is drop-in compatible
-    with eval/benchmark_pipeline.py's existing consumers, which key off
-    exactly these field names.
+    total_tokens) — this consistent shape is what api/main_langchain.py's
+    `usage` response field surfaces directly.
     """
     if usage_out is None:
         return
@@ -273,14 +272,12 @@ def groq_gateway_invoke(
     call site) -> HuggingFace fallback. Reuses gateway.py's own
     _load_groq_api_keys() and token_budget.py's ledger directly
     (has_budget()/record_actual_usage()) rather than a second, divergent
-    copy of either — writes to and reads from the SAME
-    token_budget_state.json file gateway.py's own calls use, so this
-    pipeline and ask_hybrid.py share one real daily-quota picture per key.
+    copy of either — writes to and reads from the same
+    token_budget_state.json file gateway.py's own calls use.
 
     `usage_out`, if given, gets an entry appended in the exact shape
     generation/gateway.py::_record_usage() uses (call/provider/
-    prompt_tokens/completion_tokens/reasoning_tokens/total_tokens) — drop-in
-    compatible with eval/benchmark_pipeline.py's existing usage-table code.
+    prompt_tokens/completion_tokens/reasoning_tokens/total_tokens).
 
     Returns a real LangChain AIMessage in every case (Groq or HF), so
     callers use .content/.tool_calls exactly as with a plain ChatGroq call.
@@ -739,15 +736,15 @@ def ask(
     return_structured_answers: bool = False, return_known_facts: bool = False,
 ) -> str | tuple:
     """
-    Full-parity LangChain port of ask_hybrid.py::ask_hybrid() — same
+    Full-parity LangChain port of ask_hybrid.py::ask_hybrid() (a hand-rolled
+    sibling pipeline this repo doesn't include, see ARCHITECTURE.md) — same
     control flow (routing -> agent tool-call decision -> structured
     dispatch / hybrid retrieval -> generation -> groundedness ->
     consistency), same conversation-state contract, same safety-net regex
-    patterns, and the same optional observability params ask_hybrid.py
-    exposes for its callers (api/main.py, eval/benchmark_pipeline.py):
-    `return_chunks`, `timing`, `usage`, `tool_trace`. All default to their
-    ask_hybrid.py-matching no-op values, so plain `ask(query)` behaves
-    identically to before. Routing/retrieval is shared with ask_stream()
+    patterns. `return_chunks`/`timing`/`usage`/`tool_trace` are the
+    observability params api/main.py and api/main_langchain.py actually use
+    here; all default to no-op values, so plain `ask(query)` behaves
+    identically without them. Routing/retrieval is shared with ask_stream()
     below via _route_and_retrieve() — this function only owns the
     blocking generate_answer_lc() call and groundedness/consistency
     checking. See the module docstring for exactly which pieces are

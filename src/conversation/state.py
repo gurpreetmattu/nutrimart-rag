@@ -8,7 +8,8 @@ much?" doesn't need to re-derive them from scratch.
 Pure functions, no I/O — the actual storage lives in api/session_store.py
 (a process-local dict, same shape as api/security.py's rate-limit log).
 Kept separate from that file since this shape is also directly useful to
-eval scripts (eval/run_conversation_eval.py) that never touch the API.
+CLI/eval callers of ask_langchain_hybrid.py::ask() that never touch the API
+at all (its own conversation_state param takes this same dict shape).
 """
 
 

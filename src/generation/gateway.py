@@ -23,8 +23,8 @@ actually hit, not hypothetical:
 Deliberately NOT a general multi-provider abstraction (no LiteLLM, no
 provider registry, no config-driven routing) — this project has exactly
 two providers for one real reason (quota fallback), and building more than
-that here would be exactly the kind of speculative abstraction CLAUDE.md
-says not to add.
+that here would be speculative generality with no real second use case
+to justify it.
 """
 import os
 

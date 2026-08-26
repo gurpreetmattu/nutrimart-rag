@@ -8,8 +8,8 @@ unsupported purely because the judge never saw the data it cited (this was
 the real, confirmed root cause of q05/q07's artificially low faithfulness
 scores before the fix).
 
-No pytest in this project (see CLAUDE.md) — plain assertions + a __main__
-runner, same convention as api/test_security.py and generation/test_token_budget.py.
+No pytest in this project — plain assertions + a __main__ runner, same
+convention as api/test_security.py and generation/test_token_budget.py.
 
 Monkeypatches eval.ragas_metrics.complete() with a fake that returns
 canned, correctly-shaped responses and records exactly what context text

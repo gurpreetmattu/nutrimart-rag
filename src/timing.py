@@ -1,12 +1,11 @@
 """
 timing.py — a tiny reusable stage-timer.
 
-Used by ask_hybrid.py's optional `timing` dict param (and search_hybrid.py's)
-and by eval/benchmark_pipeline.py to build the latency comparison. Not wired
-into ask.py/search_baseline.py — those stay untouched as the Phase 3 naive
-control condition (see CLAUDE.md); baseline latency is measured as a single
-black-box wall-clock duration around ask() instead, from the benchmark
-script, not from inside ask.py itself.
+Used by ask_langchain_hybrid.py's optional `timing` dict param (and
+retrieval/search_hybrid.py's/hybrid_core.py's) to instrument per-stage
+latency — dense_search, bm25_search, rerank, query_rewrite, generation,
+groundedness_check, total — surfaced in api/main_langchain.py's response
+`timing` field. See ARCHITECTURE.md §10 for how it's exposed.
 """
 import time
 from contextlib import contextmanager

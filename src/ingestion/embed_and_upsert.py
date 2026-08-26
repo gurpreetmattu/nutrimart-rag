@@ -46,8 +46,8 @@ def embed_and_upsert(chunks: list[Chunk], client: QdrantClient, model: SentenceT
     texts = [c.text for c in chunks]
 
     # bge models are trained with a specific instruction prefix for queries
-    # (not for documents) — see search_baseline.py for the query-side prefix.
-    # Documents are embedded as-is.
+    # (not for documents) — see config.py's BGE_QUERY_PREFIX, applied on the
+    # query side wherever retrieval happens. Documents are embedded as-is.
     embeddings = model.encode(texts, show_progress_bar=True, normalize_embeddings=True)
 
     points = [

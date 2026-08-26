@@ -193,10 +193,10 @@ NUTRITION_FIELD_PATTERNS: list[tuple[list[str], str]] = [
     (["cholesterol"], "cholesterol_mg"),
     # Added 2026-08-22: dietary_fibre_g turns out to genuinely exist in
     # nutrition_json for 8/23 catalog products (confirmed via direct data
-    # check) — CLAUDE.md/test_questions.py q20 previously documented "the
-    # nutrition schema doesn't even have a fibre_g key" as a permanent,
-    # accepted gap, which was true when written but is now stale: the real
-    # data has the field, it was just never wired into field-matching.
+    # check) — test_questions.py q20 previously documented "the nutrition
+    # schema doesn't even have a fibre_g key" as a permanent, accepted gap,
+    # which was true when written but is now stale: the real data has the
+    # field, it was just never wired into field-matching.
     # "does this contain fibre?"/"does this contain dietary fibre?" for
     # Britannia Brown Bread (which DOES have this field) was answering
     # "'fibre' was not found among declared ingredients or allergens" —

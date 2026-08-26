@@ -5,8 +5,9 @@ baseline limitation; this is the Phase 5 fix.
 
 Builds an in-memory index over the same chunk set embed_and_upsert.py
 puts in Qdrant (~120 chunks total), so it's cheap enough to rebuild per
-process rather than persist — no index file, no caching layer, matching
-the rest of this project's "reload models per call" style (see ask.py).
+process rather than persist — no index file, no caching layer. A CLI
+call rebuilds it once per invocation; api/resources.py builds it once and
+caches it for the life of the server process instead.
 """
 import re
 import sys

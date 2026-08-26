@@ -3,8 +3,8 @@ generation/test_token_budget.py — regression tests for token_budget.py's
 proactive per-key daily budget ledger, plus its wiring into
 gateway.py::_groq_create() (key skipping and HF fallback on exhaustion).
 
-No pytest in this project (see CLAUDE.md) — plain assertions + a __main__
-runner, same convention as api/test_security.py and eval/run_eval.py.
+No pytest in this project — plain assertions + a __main__ runner, same
+convention as every other test_*.py file here.
 
 Uses a real temp state file (swapped in via monkeypatching the module's
 _STATE_PATH, restored after) so this never touches the real

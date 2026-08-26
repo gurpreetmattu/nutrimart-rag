@@ -1,16 +1,16 @@
 """
-search_hybrid.py — Phase 5 hybrid retriever: BM25 + dense fusion,
-doc_type intent boost, ingredient-entity scoping, cross-encoder rerank.
+search_hybrid.py — the hybrid retriever: BM25 + dense fusion, doc_type
+intent boost, ingredient-entity scoping, cross-encoder rerank.
 
-This is the hybrid counterpart to retrieval/search_baseline.py, which
-stays untouched and naive as the Phase 3 control condition (see
-project_state_summary.md's pipeline steps 3-4 and CLAUDE.md). Called
-from ask_hybrid.py, never from ask.py.
+Called from hybrid_core.py::retrieve_hybrid_with_retry(), which
+ask_langchain_hybrid.py depends on for its full hybrid retrieval path
+(ask_langchain.py's own naive pipeline uses a separate, simpler
+dense-only retriever instead — see its own docstring).
 
 Every filtering step here is deliberately inclusive-by-default — see
-PHASE3_TESTING_LOG.md's Finding 6/7 writeups and ingestion/parse_kb.py's
-preamble-default fix: most of the KB's doc_type/entity metadata is thin
-or missing, so a chunk is only ever excluded when there's specific,
+ingestion/parse_kb.py's preamble-default fix: most of the KB's doc_type/
+entity metadata is thin or missing, so a chunk is only ever excluded when
+there's specific,
 confirmable evidence it doesn't belong (a different INS code than
 anything in the resolved product) — never on an unmatched or absent
 signal.

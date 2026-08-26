@@ -27,9 +27,11 @@ retrieval/search_baseline.py and generation/llm.py:
 
 Deliberately NOT ported: BM25 fusion, cross-encoder reranking, corrective
 retry, groundedness checking, tool-calling agent routing, comparison_group
-override — all of that is ask_hybrid.py-only by design (see CLAUDE.md).
-This file exists to demonstrate the standard LangChain RAG pattern, not to
-replicate the hybrid pipeline's engineering.
+override — all of that is ask_hybrid.py-only by design (see
+ask_langchain_hybrid.py, this repo's own full-parity port of it, if you
+want that machinery in LangChain form). This file exists to demonstrate
+the standard LangChain RAG pattern, not to replicate the hybrid pipeline's
+engineering.
 
 No fallback to Hugging Face on Groq quota exhaustion here (unlike
 generation/gateway.py) — ChatGroq is used directly, since building a

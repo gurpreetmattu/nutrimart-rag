@@ -3,8 +3,8 @@ api/test_security.py — regression tests for api/security.py's guardrails
 (rate limiting, prompt-injection heuristic) plus the query length bound
 enforced by ChatRequest in api/main_langchain.py.
 
-No pytest in this project (see CLAUDE.md) — plain assertions + a __main__
-runner, same convention as eval/run_eval.py. All cases here are pure
+No pytest in this project — plain assertions + a __main__ runner, same
+convention as every other test_*.py file here. All cases here are pure
 Python/Pydantic checks: no server, no LLM call, no Qdrant, no quota cost —
 run this any time security.py or ChatRequest's Field bounds change.
 

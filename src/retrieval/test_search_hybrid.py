@@ -5,8 +5,8 @@ Finding 31), _fuse()'s new bm25_score plumbing (Finding 34, the q27 fix's
 dependency), _detect_query_class()/_get_class_ins_index() (Finding 36's
 functional-class exclusion), and find_comparison_group_match() (Finding 16).
 
-No pytest in this project (see CLAUDE.md) — plain assertions + a __main__
-runner, same convention as api/test_security.py and generation/test_token_budget.py.
+No pytest in this project — plain assertions + a __main__ runner, same
+convention as api/test_security.py and generation/test_token_budget.py.
 Every check here is offline (no Qdrant, no embedding/cross-encoder model, no
 LLM call) — it only locks in the pure-function contracts these bug fixes
 depend on, not the live retrieval pipeline itself (that's what the eval
