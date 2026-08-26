@@ -134,6 +134,17 @@ python src/eval/run_ragas_eval.py --out ragas_report.md
 python src/eval/run_ragas_eval.py --n 3   # cheap pilot
 ```
 
+The same four metrics via the **real** `ragas` PyPI package (rotates across
+every configured `GROQ_API_KEY*` — a real daily-quota exhaustion on a
+single key is what a full 20-question run actually costs; see the script's
+own docstring for the ragas/instructor version-compat bugs it works around):
+
+```bash
+python src/eval/run_real_ragas.py --out ragas_real_report.md
+python src/eval/run_real_ragas.py --n 3            # cheap pilot
+python src/eval/run_real_ragas.py --questions q01 q08 q27
+```
+
 Offline regression checks (no LLM/network cost):
 
 ```bash

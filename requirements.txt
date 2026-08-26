@@ -13,3 +13,13 @@ langchain-groq
 langchain-huggingface
 langchain-qdrant
 langfuse
+# Only needed for eval/run_real_ragas.py (the real ragas package, not the
+# hand-rolled equivalent everything else uses) -- see that file's own
+# docstring for two real version-compat bugs it works around: an eager,
+# unused ChatVertexAI import broken against this project's langchain-community
+# version (worked around with an import shim, no package change needed),
+# and an outdated instructor pin (fixed by requiring a recent instructor
+# directly, since ragas's own dependency range resolves to one too old to
+# have instructor.Provider.GENAI, which ragas's code references unconditionally).
+ragas>=0.4.3
+instructor>=1.15.0
