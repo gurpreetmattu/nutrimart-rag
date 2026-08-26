@@ -85,6 +85,7 @@ from ragas.metrics.collections import (
 )
 
 from ask_langchain_hybrid import ask, build_resources, GROQ_MODEL
+from generation.llm import build_known_facts_block
 from config import EMBEDDING_MODEL
 from eval.test_questions import QUESTIONS
 
@@ -186,12 +187,31 @@ async def _score_question(q: dict, resources: dict, llms: list, embeddings) -> d
     query = q["query"]
     reference = q["reference_answer"]
 
-    answer, chunks = ask(query, verbose=False, resources=resources, return_chunks=True)
+    answer, chunks, structured_answers, known_facts = ask(
+        query, verbose=False, resources=resources,
+        return_chunks=True, return_structured_answers=True, return_known_facts=True,
+    )
 
     if not chunks:
         return {"id": q["id"], "query": query, "skipped": "no chunks retrieved (structured-only or insufficient-evidence route)"}
 
+    # Real bug found live 2026-08-26 checking WHY q05/q07/q22 scored so low:
+    # the answer legitimately cites products.sqlite-grounded facts (a
+    # structured-tool prefix, or a known_facts value woven into the prose —
+    # e.g. q22's entire ingredient-list paragraph, q07's "still contains
+    # 8.3 mg sodium... (products.sqlite, sodium_mg)") that never appear in
+    # `chunks` at all — faithfulness only had the KB context to check
+    # against, so it correctly (and unhelpfully) flagged those as
+    # unsupported. This is the EXACT gap eval/ragas_metrics.py's own
+    # faithfulness() already fixed for the hand-rolled harness (see its
+    # `known_facts_block` param, added specifically for q05/q07) — this
+    # script just wasn't using the same `return_structured_answers`/
+    # `return_known_facts` flags ask() already exposes for exactly this.
     contexts = [f"{c['heading']}: {c['text']}" for c in chunks]
+    if structured_answers:
+        contexts.append("Structured product data (products.sqlite): " + " ".join(structured_answers))
+    if known_facts:
+        contexts.append("Known product facts (products.sqlite): " + build_known_facts_block(known_facts))
 
     # Sequential, not asyncio.gather — Groq's per-minute TOKEN rate limit
     # (8000 TPM on this tier, independent of the daily-quota ledger
