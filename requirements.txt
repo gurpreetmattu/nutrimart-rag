@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+qdrant-client
+sentence-transformers
+rank-bm25
+pydantic
+python-dotenv
+groq
+huggingface-hub
+langchain
+langchain-community
+langchain-groq
+langchain-huggingface
+langchain-qdrant
+langfuse

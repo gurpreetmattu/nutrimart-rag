@@ -1,0 +1,2313 @@
+{
+  "schema_notes": {
+    "ingredients_parsed": "Array of {name, component}. component is null for single-component products; a named string (e.g. 'noodles', 'masala_tastemaker', 'choco_creme', 'cookie_shell', 'dark_chocolate_paste') for multi-part products.",
+    "nutrition.basis": "One of 'per_100g', 'per_100ml', 'per_serving_only' (product has no meaningful per-100 basis, e.g. single-serve items or per-bottle-only labels). All nutrient values live under nutrition.values regardless of basis, using this basis as the reference amount.",
+    "pack_size": "{value, unit} where unit is 'g' or 'ml'. Never inferred \u2014 matches what the label/pack actually states.",
+    "allergen_declaration_present": "True if the label carries any allergen section at all (even if empty/none declared). False if no allergen section was printed on the label.",
+    "data_note": "Present only where a real discrepancy, ambiguity, or provenance issue was found and could not be fully resolved. Absence of this field does not guarantee zero ambiguity, only that none was flagged.",
+    "canonical_scope": "23 products below (ids 1-23) are the project's canonical set. Diet Coke was collected as the canonical diet/zero-sugar product; Coca-Cola Zero Sugar was evaluated during Phase 1 but permanently removed from this dataset due to a confirmed platform-side data error (its Instamart listing showed regular Coca-Cola's ingredients panel across three independent images, contradicting its own 0g-sugar nutrition table) and is not retained anywhere in this file."
+  },
+  "products": [
+    {
+      "product_id": "parle_g_original",
+      "name": "Parle-G Original Gluco Biscuits",
+      "brand": "Parle",
+      "category": "biscuits",
+      "pack_size": {
+        "value": 800,
+        "unit": "g"
+      },
+      "ingredients_raw": "Refined Wheat Flour (Maida) (68%), Sugar, Refined Palm Oil, Invert Sugar Syrup (Sugar, Citric Acid), Iodised Salt, Raising Agents [503(ii), 500(ii)], Milk Solids, Flour Treatment Agent [1101(ii)] and Emulsifier of Vegetable Origin [472e]. Contains added flavour (artificial flavouring substances - vanilla).",
+      "ingredients_parsed": [
+        {
+          "name": "refined wheat flour (maida)",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "refined palm oil",
+          "component": null
+        },
+        {
+          "name": "invert sugar syrup",
+          "component": null
+        },
+        {
+          "name": "citric acid",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "raising agent 503(ii)",
+          "component": null
+        },
+        {
+          "name": "raising agent 500(ii)",
+          "component": null
+        },
+        {
+          "name": "milk solids",
+          "component": null
+        },
+        {
+          "name": "flour treatment agent 1101(ii)",
+          "component": null
+        },
+        {
+          "name": "emulsifier 472e",
+          "component": null
+        },
+        {
+          "name": "artificial vanilla flavouring",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "milk"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 15,
+          "unit": "g"
+        },
+        "servings_per_pack": 53.33,
+        "values": {
+          "energy_kcal": 454.0,
+          "protein_g": 6.9,
+          "carbohydrate_g": 77.3,
+          "total_sugars_g": 25.5,
+          "added_sugars_g": 25.0,
+          "total_fat_g": 13.0,
+          "saturated_fat_g": 6.0,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 296
+        }
+      },
+      "description": "Parle-G Original Glucose Biscuits \u2014 sweetness and nutrition, source of energy for body and mind.",
+      "source_url": "https://instamart.in/item/J3KK52U9CR",
+      "fssai_license": "10013022002253"
+    },
+    {
+      "product_id": "britannia_good_day_cashew",
+      "name": "Britannia Good Day Cashew Cookies",
+      "brand": "Britannia",
+      "category": "biscuits",
+      "pack_size": {
+        "value": 826.7,
+        "unit": "g"
+      },
+      "ingredients_raw": "Refined Wheat Flour (Maida), Refined Palm Oil, Sugar, Invert Sugar Syrup, Cashew (1.4%), Milk Products [Milk Solids & Butter (0.1%)], Raising Agents [503(ii) & 500(ii)], Iodised Salt, Emulsifiers [322(i), 471 & 472e] and Nature Identical & Artificial (Vanilla & Milk) Flavouring Substances.",
+      "ingredients_parsed": [
+        {
+          "name": "refined wheat flour (maida)",
+          "component": null
+        },
+        {
+          "name": "refined palm oil",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "invert sugar syrup",
+          "component": null
+        },
+        {
+          "name": "cashew",
+          "component": null
+        },
+        {
+          "name": "milk solids",
+          "component": null
+        },
+        {
+          "name": "butter",
+          "component": null
+        },
+        {
+          "name": "raising agent 503(ii)",
+          "component": null
+        },
+        {
+          "name": "raising agent 500(ii)",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "emulsifier 322(i)",
+          "component": null
+        },
+        {
+          "name": "emulsifier 471",
+          "component": null
+        },
+        {
+          "name": "emulsifier 472e",
+          "component": null
+        },
+        {
+          "name": "artificial vanilla & milk flavouring",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "milk",
+        "cashew (tree nut)"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 15,
+          "unit": "g"
+        },
+        "servings_per_pack": 55,
+        "values": {
+          "energy_kcal": 509.0,
+          "protein_g": 6.7,
+          "carbohydrate_g": 67.3,
+          "total_sugars_g": 20.5,
+          "added_sugars_g": 20.3,
+          "total_fat_g": 23.7,
+          "saturated_fat_g": 11.6,
+          "mono_unsaturated_fat_g": 9.2,
+          "poly_unsaturated_fat_g": 2.6,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 1.5,
+          "sodium_mg": 220
+        }
+      },
+      "description": "Britannia Good Day Cashew Cookies \u2014 crunchy cookies made with real cashews, a tea-time companion.",
+      "source_url": "https://instamart.in/item/79TOVF770U",
+      "fssai_license": "10015043001129"
+    },
+    {
+      "product_id": "sunfeast_dark_fantasy_choco_fills",
+      "name": "Sunfeast Dark Fantasy Choco Fills (Original)",
+      "brand": "Sunfeast (ITC)",
+      "category": "biscuits",
+      "pack_size": {
+        "value": 460,
+        "unit": "g"
+      },
+      "ingredients_raw": "Choco Cr\u00e8me (38.0%) [Sugar, Refined Palmolein, Refined Palm Oil, Cocoa Solids, Emulsifier [Lecithin (from Soyabean)], Nature Identical Flavouring Substances (Chocolate), Artificial Flavouring Substances (Vanilla)], Maida (Refined Wheat Flour), Hydrogenated Vegetable Oil, Sugar, Invert Syrup, Liquid Glucose, Raising Agents [503(ii), 500(ii), 450(i)], Cocoa Solids (0.7%), Butter, Milk Solids, Iodized Salt, Nature Identical Flavouring Substances (Milk Chocolate), Colours (150c, 150d), Emulsifiers [Lecithin (from Soyabean), Mono and Diglycerides of Fatty Acids (from Palm Oil)], Artificial Flavouring Substances (Milk, Vanilla). Contains Wheat, Milk, Soy. May contain Nut, Sulphite.",
+      "ingredients_parsed": [
+        {
+          "name": "sugar",
+          "component": "choco_creme"
+        },
+        {
+          "name": "refined palmolein",
+          "component": "choco_creme"
+        },
+        {
+          "name": "refined palm oil",
+          "component": "choco_creme"
+        },
+        {
+          "name": "cocoa solids",
+          "component": "choco_creme"
+        },
+        {
+          "name": "lecithin (soyabean)",
+          "component": "choco_creme"
+        },
+        {
+          "name": "chocolate flavouring (nature identical)",
+          "component": "choco_creme"
+        },
+        {
+          "name": "artificial vanilla flavouring",
+          "component": "choco_creme"
+        },
+        {
+          "name": "refined wheat flour (maida)",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "hydrogenated vegetable oil",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "invert syrup",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "liquid glucose",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "raising agent 503(ii)",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "raising agent 500(ii)",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "raising agent 450(i)",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "butter",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "milk solids",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "iodized salt",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "milk chocolate flavouring (nature identical)",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "colour 150c",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "colour 150d",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "mono and diglycerides of fatty acids",
+          "component": "cookie_shell"
+        },
+        {
+          "name": "artificial milk flavouring",
+          "component": "cookie_shell"
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "milk",
+        "soy"
+      ],
+      "allergens_may_contain": [
+        "tree nut",
+        "sulphite"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 11.5,
+          "unit": "g"
+        },
+        "servings_per_pack": 20,
+        "values": {
+          "energy_kcal": 507,
+          "protein_g": 7.3,
+          "carbohydrate_g": 61.1,
+          "total_sugars_g": 35.7,
+          "added_sugars_g": 33.9,
+          "total_fat_g": 27.3,
+          "saturated_fat_g": 12.7,
+          "trans_fat_g": 0.1,
+          "cholesterol_mg": 0.3,
+          "sodium_mg": 181.5
+        }
+      },
+      "description": "Sunfeast Dark Fantasy Choco Fills \u2014 filled cookie with a molten choco cr\u00e8me centre, milk chocolate notes.",
+      "source_url": "https://instamart.in/item/ZR1VFICWDW",
+      "fssai_license": "10012031000312"
+    },
+    {
+      "product_id": "mcvities_digestive",
+      "name": "McVitie's Digestive High Fibre Biscuits (Goodness of Wholewheat)",
+      "brand": "McVitie's",
+      "category": "biscuits",
+      "pack_size": {
+        "value": 959.1,
+        "unit": "g"
+      },
+      "ingredients_raw": "Refined Wheat Flour (Maida) (50.5%), Wheat Flour (Atta) (18.3%), Edible Vegetable Oil (Palm Oil), Sugar, Wheat Bran (3.1%), Invert Sugar Syrup, Raising Agents [INS 500(ii), INS 503(ii), INS 450(i)], Iodised Salt, Malt Extract, Emulsifiers (INS 322, INS 472e), Acidity Regulator (INS 296), Dough Conditioner (INS 223).",
+      "ingredients_parsed": [
+        {
+          "name": "refined wheat flour (maida)",
+          "component": null
+        },
+        {
+          "name": "wheat flour (atta)",
+          "component": null
+        },
+        {
+          "name": "edible vegetable oil (palm oil)",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "wheat bran",
+          "component": null
+        },
+        {
+          "name": "invert sugar syrup",
+          "component": null
+        },
+        {
+          "name": "raising agent 500(ii)",
+          "component": null
+        },
+        {
+          "name": "raising agent 503(ii)",
+          "component": null
+        },
+        {
+          "name": "raising agent 450(i)",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "malt extract",
+          "component": null
+        },
+        {
+          "name": "emulsifier 322",
+          "component": null
+        },
+        {
+          "name": "emulsifier 472e",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 296",
+          "component": null
+        },
+        {
+          "name": "dough conditioner 223",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "wheat"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 25,
+          "unit": "g"
+        },
+        "servings_per_pack": 38,
+        "values": {
+          "energy_kcal": 475,
+          "protein_g": 7.8,
+          "carbohydrate_g": 69.8,
+          "total_sugars_g": 17.6,
+          "added_sugars_g": 16.2,
+          "dietary_fibre_g": 6.4,
+          "total_fat_g": 18.2,
+          "saturated_fat_g": 8.8,
+          "mono_unsaturated_fat_g": 7.3,
+          "poly_unsaturated_fat_g": 2.2,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 523
+        }
+      },
+      "description": "McVitie's Digestive \u2014 high fibre biscuits made with wholewheat goodness, trans fat free.",
+      "source_url": "https://instamart.in/item/XV2LWEAB85",
+      "fssai_license": "10013011001061",
+      "co_licensee_fssai": "10012062000031"
+    },
+    {
+      "product_id": "lays_classic_salted",
+      "name": "Lay's Classic Salted Crunchy Potato Chips",
+      "brand": "Lay's (PepsiCo)",
+      "category": "chips_namkeen",
+      "pack_size": {
+        "value": 75,
+        "unit": "g"
+      },
+      "ingredients_raw": "Potato (88%), Edible Vegetable Oil^, Iodised Salt (1%). ^Based on internal grading and quality parameters, proprietary food - potato chips.",
+      "ingredients_parsed": [
+        {
+          "name": "potato",
+          "component": null
+        },
+        {
+          "name": "edible vegetable oil (palmolein or rice bran oil, batch-dependent)",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 20,
+          "unit": "g"
+        },
+        "servings_per_pack": null,
+        "values": {
+          "energy_kcal": 553,
+          "protein_g": 6.7,
+          "carbohydrate_g": 52.6,
+          "total_sugars_g": 0.6,
+          "added_sugars_g": 0,
+          "total_fat_g": 35.1,
+          "saturated_fat_g_palmolein_batch": 15.8,
+          "saturated_fat_g_rice_bran_oil_batch": 8.1,
+          "trans_fat_g": 0.1,
+          "sodium_mg": 500
+        },
+        "label_note": "Saturated fat varies by batch depending on which cooking oil was used (Palmolein or Rice Bran Oil), indicated by a symbol tied to the last character of the batch code on the physical pack. The generic product listing does not specify which oil a given delivered unit contains."
+      },
+      "description": "Lay's Classic Salted \u2014 made from finest potatoes, no artificial flavours or colours.",
+      "source_url": "https://instamart.in/item/ZWG519PH5O",
+      "fssai_license": "10014064000435"
+    },
+    {
+      "product_id": "haldirams_nagpur_aloo_bhujia",
+      "name": "Haldiram's Nagpur Aloo Bhujia",
+      "brand": "Haldiram's",
+      "category": "chips_namkeen",
+      "pack_size": {
+        "value": 1000,
+        "unit": "g"
+      },
+      "ingredients_raw": "Potato, Edible Vegetable Oil (Palmolein, Cotton Seed, Corn, Sunflower, Rice Bran), Bengal Gram Flour (Besan), Potato Flakes, Potato Starch, Tapioca Starch, Tapary Beans (Moth Dal) Flour, Iodised Salt, Red Chilli Powder, Black Salt, Acidity Regulator (INS 330), Black Pepper, Clove, Dried Ginger Powder, Dried Garlic Powder, Cumin Powder, Bay Leaf, Nutmeg, Cinnamon, Turmeric, Mint Leaves, Natural Flavours & Natural Flavouring Substances & Nature Identical Flavouring Substances.",
+      "ingredients_parsed": [
+        {
+          "name": "potato",
+          "component": null
+        },
+        {
+          "name": "edible vegetable oil (palmolein, cottonseed, corn, sunflower, rice bran blend)",
+          "component": null
+        },
+        {
+          "name": "bengal gram flour (besan)",
+          "component": null
+        },
+        {
+          "name": "potato flakes",
+          "component": null
+        },
+        {
+          "name": "potato starch",
+          "component": null
+        },
+        {
+          "name": "tapioca starch",
+          "component": null
+        },
+        {
+          "name": "moth dal flour",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "red chilli powder",
+          "component": null
+        },
+        {
+          "name": "black salt",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 330",
+          "component": null
+        },
+        {
+          "name": "black pepper",
+          "component": null
+        },
+        {
+          "name": "clove",
+          "component": null
+        },
+        {
+          "name": "dried ginger powder",
+          "component": null
+        },
+        {
+          "name": "dried garlic powder",
+          "component": null
+        },
+        {
+          "name": "cumin powder",
+          "component": null
+        },
+        {
+          "name": "bay leaf",
+          "component": null
+        },
+        {
+          "name": "nutmeg",
+          "component": null
+        },
+        {
+          "name": "cinnamon",
+          "component": null
+        },
+        {
+          "name": "turmeric",
+          "component": null
+        },
+        {
+          "name": "mint leaves",
+          "component": null
+        },
+        {
+          "name": "natural & nature identical flavouring substances",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [
+        "wheat",
+        "milk",
+        "nut",
+        "soy"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 20,
+          "unit": "g"
+        },
+        "servings_per_pack": 50,
+        "values": {
+          "energy_kcal": 564,
+          "protein_g": 8.97,
+          "carbohydrate_g": 47.71,
+          "total_sugars_g": 0,
+          "added_sugars_g": 0,
+          "total_fat_g": 37.48,
+          "saturated_fat_g": 16.42,
+          "trans_fat_g": 0.1,
+          "sodium_mg": 984,
+          "dietary_fibre_g": 4.04
+        }
+      },
+      "description": "Haldiram's Nagpur Aloo Bhujia \u2014 savory, crispy potato-based namkeen with a bold spice blend, ready to eat.",
+      "source_url": "https://instamart.in/item/DZ4BHFHVRX",
+      "fssai_license": "10015022004173",
+      "data_note": "Two label photos for this product showed materially different sodium (615mg vs 984mg per 100g), oil composition, and allergen declaration. Treated as the same SKU per user confirmation; this record reflects the more complete (later) label as canonical."
+    },
+    {
+      "product_id": "kurkure_masala_munch",
+      "name": "Kurkure Masala Munch",
+      "brand": "Kurkure (PepsiCo)",
+      "category": "chips_namkeen",
+      "pack_size": {
+        "value": 81.9,
+        "unit": "g"
+      },
+      "ingredients_raw": "Cereal Products (67%) [Rice Meal (44%), Corn Meal (23%)], Edible Vegetable Oil (Rice Bran Oil), Seasoning (used as a flavouring agent) [Spices & Condiments (contains onion and garlic), Iodised Salt, Sugar, Flavour (Natural and Nature Identical Flavouring Substances), Black Salt, Tomato Powder, Acidity Regulators (330, 296, 334), Colour (160c), Maltodextrin], Gram Meal (0.4%).",
+      "ingredients_parsed": [
+        {
+          "name": "rice meal",
+          "component": null
+        },
+        {
+          "name": "corn meal",
+          "component": null
+        },
+        {
+          "name": "rice bran oil",
+          "component": null
+        },
+        {
+          "name": "spices & condiments",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "natural & nature identical flavouring substances",
+          "component": null
+        },
+        {
+          "name": "black salt",
+          "component": null
+        },
+        {
+          "name": "tomato powder",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 330",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 296",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 334",
+          "component": null
+        },
+        {
+          "name": "colour 160c",
+          "component": null
+        },
+        {
+          "name": "maltodextrin",
+          "component": null
+        },
+        {
+          "name": "gram meal",
+          "component": null
+        },
+        {
+          "name": "onion",
+          "component": null
+        },
+        {
+          "name": "garlic",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [
+        "sulphite"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 20,
+          "unit": "g"
+        },
+        "servings_per_pack": null,
+        "values": {
+          "energy_kcal": 552,
+          "protein_g": 6,
+          "carbohydrate_g": 56.4,
+          "total_sugars_g": 1.4,
+          "added_sugars_g": 0.8,
+          "total_fat_g": 33.6,
+          "saturated_fat_g": 7.4,
+          "trans_fat_g": 0.1,
+          "sodium_mg": 693
+        }
+      },
+      "description": "Kurkure Masala Munch \u2014 India's chatpata namkeen snack made with rice, corn and dal, bold spicy masala flavour.",
+      "source_url": "https://instamart.in/item/F75TJ44CBD",
+      "fssai_license": "10014064000435",
+      "data_note": "App-page ingredient listing differs materially from the physical label (different oil, missing colour 160c and sulphite allergen declaration, extra ingredients not on label). Label treated as canonical per established sourcing rule."
+    },
+    {
+      "product_id": "maggi_double_masala_noodles",
+      "name": "MAGGI Double Masala 2-Minute Noodles",
+      "brand": "Maggi (Nestl\u00e9)",
+      "category": "instant_noodles",
+      "pack_size": {
+        "value": 95,
+        "unit": "g"
+      },
+      "ingredients_raw": "Noodles: Refined Wheat Flour (Maida), Palm Oil, Iodised Salt, Wheat Gluten, Thickeners (508 & 412), Acidity Regulators (501(i) & 500(i)) and Humectant (451(i)). Masala Tastemaker: Mixed Spices (26.2%) [Onion powder, Coriander powder, Red chilli powder, Turmeric powder, Garlic powder, Cumin powder, Aniseed powder, Ginger powder, Fenugreek powder, Black pepper powder, Toasted onion powder, Clove powder, Green cardamom powder, Nutmeg powder], Hydrolysed groundnut protein, Refined Wheat Flour (Maida), Sugar, Starch, Palm Oil, Iodised Salt, Thickener (508), Acidity Regulator (330), Flavour Enhancer (635), Colour (150d), Mineral and Wheat Gluten. Allergen Note: Contains Wheat & Nut. May contain Milk, Oats and Soy.",
+      "ingredients_parsed": [
+        {
+          "name": "refined wheat flour (maida)",
+          "component": "noodles"
+        },
+        {
+          "name": "palm oil",
+          "component": "noodles"
+        },
+        {
+          "name": "iodised salt",
+          "component": "noodles"
+        },
+        {
+          "name": "wheat gluten",
+          "component": "noodles"
+        },
+        {
+          "name": "thickener 508",
+          "component": "noodles"
+        },
+        {
+          "name": "thickener 412",
+          "component": "noodles"
+        },
+        {
+          "name": "acidity regulator 501(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "acidity regulator 500(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "humectant 451(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "mixed spices",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "hydrolysed groundnut protein",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "refined wheat flour (maida)",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "sugar",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "starch",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "palm oil",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "iodised salt",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "thickener 508",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "acidity regulator 330",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "flavour enhancer 635",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "colour 150d",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "mineral",
+          "component": "masala_tastemaker"
+        },
+        {
+          "name": "wheat gluten",
+          "component": "masala_tastemaker"
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "nut"
+      ],
+      "allergens_may_contain": [
+        "milk",
+        "oats",
+        "soy"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 47.5,
+          "unit": "g"
+        },
+        "servings_per_pack": 2,
+        "values": {
+          "energy_kcal": 369,
+          "protein_g": 7.2,
+          "carbohydrate_g": 55.3,
+          "total_sugars_g": 1.7,
+          "added_sugars_g": 1.6,
+          "total_fat_g": 13.2,
+          "saturated_fat_g_not_more_than": 9.3,
+          "trans_fat_g_not_more_than": 0.14,
+          "sodium_mg": 1242.0,
+          "iron_mg": 10.3
+        }
+      },
+      "description": "MAGGI Double Masala \u2014 2-minute instant noodles with 2 masala tastemaker sachets for extra flavour.",
+      "source_url": "https://instamart.in/item/LLCA5UP70U",
+      "fssai_license": "10012011000168"
+    },
+    {
+      "product_id": "yippee_magic_masala_noodles",
+      "name": "Yippee Magic Masala Noodles (4-in-1)",
+      "brand": "Yippee (Sunfeast/ITC)",
+      "category": "instant_noodles",
+      "pack_size": {
+        "value": 272,
+        "unit": "g"
+      },
+      "ingredients_raw": "Instant Noodles: Refined Wheat Flour (Maida) (78.4%), Refined Palm Oil, Iodised Salt, Wheat Gluten (0.4%), Thickeners (INS 508, INS 412), Stabilizers (INS 170(i), INS 339(i), INS 450(i), INS 452(i)) and Acidity Regulators (INS 501(i), INS 500(i), INS 330). Seasoning: Masala Mix: Dehydrated Vegetables [Beans (9.5%), Carrot (7.1%), Onion (4.6%) and Cabbage (3.8%)], Instant Noodle Powder [Refined Wheat Flour (Maida) (15.8%), Refined Palm Oil, Iodised Salt, Wheat Gluten (0.07%)], Spices and Condiments (17.6%) [Garlic, Coriander, Cumin, Ginger, Chilli, Aniseed, Fenugreek, Black Pepper, Cardamom, Nutmeg, Caraway, Cinnamon, Clove and Turmeric], Sugar, Iodised Salt, Hydrolyzed Vegetable Protein, Natural Flavours and Natural Flavouring Substances, Nature Identical Flavouring Substances, Maltodextrin, Yeast Extract, Acidity Regulator (INS 330), Flavour Enhancers (INS 627, INS 631) and Anticaking Agent (INS 551). Contains Wheat, Soy. May Contain Milk, Nut.",
+      "ingredients_parsed": [
+        {
+          "name": "refined wheat flour (maida)",
+          "component": "noodles"
+        },
+        {
+          "name": "refined palm oil",
+          "component": "noodles"
+        },
+        {
+          "name": "iodised salt",
+          "component": "noodles"
+        },
+        {
+          "name": "wheat gluten",
+          "component": "noodles"
+        },
+        {
+          "name": "thickener 508",
+          "component": "noodles"
+        },
+        {
+          "name": "thickener 412",
+          "component": "noodles"
+        },
+        {
+          "name": "stabilizer 170(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "stabilizer 339(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "stabilizer 450(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "stabilizer 452(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "acidity regulator 501(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "acidity regulator 500(i)",
+          "component": "noodles"
+        },
+        {
+          "name": "acidity regulator 330",
+          "component": "noodles"
+        },
+        {
+          "name": "dehydrated beans",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "dehydrated carrot",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "dehydrated onion",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "dehydrated cabbage",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "instant noodle powder (wheat flour, palm oil, salt, wheat gluten)",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "garlic",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "coriander",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "cumin",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "ginger",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "chilli",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "aniseed",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "fenugreek",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "black pepper",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "cardamom",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "nutmeg",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "caraway",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "cinnamon",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "clove",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "turmeric",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "sugar",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "iodised salt",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "hydrolyzed vegetable protein",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "natural & nature identical flavouring substances",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "maltodextrin",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "yeast extract",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "acidity regulator 330",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "flavour enhancer 627",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "flavour enhancer 631",
+          "component": "masala_seasoning"
+        },
+        {
+          "name": "anticaking agent 551",
+          "component": "masala_seasoning"
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "soy"
+      ],
+      "allergens_may_contain": [
+        "milk",
+        "nut"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 30,
+          "unit": "g"
+        },
+        "servings_per_pack": 8,
+        "values": {
+          "energy_kcal": 459,
+          "protein_g": 9.0,
+          "carbohydrate_g": 62.6,
+          "total_sugars_g": 3.0,
+          "added_sugars_g": 1.6,
+          "total_fat_g": 20.1,
+          "saturated_fat_g": 10.7,
+          "trans_fat_g": 0.1,
+          "sodium_mg": 1247.1
+        }
+      },
+      "description": "Yippee Magic Masala Noodles \u2014 instant noodles with real dehydrated vegetables and Indian spice blend.",
+      "source_url": "https://instamart.in/item/EZ7E7HRSPY",
+      "fssai_license": null,
+      "data_note": "App-page ingredient text has garbled percentage values and misorders one item vs. the label. Label treated as canonical. FSSAI license number not visible in submitted label crop \u2014 left null pending a clearer image."
+    },
+    {
+      "product_id": "kelloggs_corn_flakes_original",
+      "name": "Kellogg's Corn Flakes Original",
+      "brand": "Kellogg's",
+      "category": "breakfast_cereal",
+      "pack_size": {
+        "value": 1150,
+        "unit": "g"
+      },
+      "ingredients_raw": "Corn Grits (90%), Sugar, Cereal Extract, Iodized Salt, Vitamins, Antioxidant (INS 307b), Minerals. Allergen Declaration: Contains Wheat & Barley. May Contain Soy, Milk, Oats & Nuts.",
+      "ingredients_parsed": [
+        {
+          "name": "corn grits",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "cereal extract",
+          "component": null
+        },
+        {
+          "name": "iodized salt",
+          "component": null
+        },
+        {
+          "name": "vitamins (fortification blend)",
+          "component": null
+        },
+        {
+          "name": "antioxidant 307b",
+          "component": null
+        },
+        {
+          "name": "minerals (fortification blend)",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "barley"
+      ],
+      "allergens_may_contain": [
+        "soy",
+        "milk",
+        "oats",
+        "nut"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 30,
+          "unit": "g"
+        },
+        "servings_per_pack": null,
+        "values": {
+          "energy_kcal": 378,
+          "protein_g": 6.7,
+          "carbohydrate_g": 86.3,
+          "total_sugars_g": 9.2,
+          "added_sugars_g": 8.5,
+          "dietary_fibre_g": 2.5,
+          "total_fat_g": 1.8,
+          "saturated_fat_g": 0.9,
+          "mono_unsaturated_fat_g": 0.7,
+          "poly_unsaturated_fat_g": 0.2,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 496
+        },
+        "fortification": {
+          "vitamin_c_mg": 13.0,
+          "vitamin_b1_mg": 1.0,
+          "vitamin_b2_mg": 1.2,
+          "vitamin_b3_mg": 13.4,
+          "vitamin_b6_mg": 1.7,
+          "vitamin_b12_ug": 0.33,
+          "folate_ug": 84.6,
+          "iron_mg": 9.0
+        },
+        "per_serve_with_200ml_cows_milk": {
+          "energy_kcal": 260,
+          "energy_from_fat_kcal": 84,
+          "total_fat_g": 9.3
+        }
+      },
+      "description": "Kellogg's Corn Flakes Original \u2014 crunchy toasted corn cereal, fortified with 7 vitamins, iron and protein, naturally low in fat.",
+      "source_url": "https://instamart.in/item/WUW04ZNEOE",
+      "fssai_license": "10013022002031"
+    },
+    {
+      "product_id": "kelloggs_chocos",
+      "name": "Kellogg's Multigrain Chocos (More Chocolatey, No Maida)",
+      "brand": "Kellogg's",
+      "category": "breakfast_cereal",
+      "pack_size": {
+        "value": 250,
+        "unit": "g"
+      },
+      "ingredients_raw": "Multigrain Flour Mix (64.8%) [Wheat Flour (Atta) (55.8%), Sorghum (Jowar) Flour (3%), Rice Flour (3%), Corn Meal (3%)], Sugar, Cocoa Solids (5.3%), Minerals, Cereal Extract, Iodized Salt, Colours (INS 150a, INS 150d), Edible Vegetable Oil (Palmolein), Flavours (Nature Identical & Artificial) (Cream), Vitamins, Antioxidant (INS 307b). Allergen Declaration: Contains Wheat & Barley. May Contain Soy, Milk, Oats & Nuts.",
+      "ingredients_parsed": [
+        {
+          "name": "wheat flour (atta)",
+          "component": null
+        },
+        {
+          "name": "sorghum (jowar) flour",
+          "component": null
+        },
+        {
+          "name": "rice flour",
+          "component": null
+        },
+        {
+          "name": "corn meal",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "cocoa solids",
+          "component": null
+        },
+        {
+          "name": "minerals (fortification blend)",
+          "component": null
+        },
+        {
+          "name": "cereal extract",
+          "component": null
+        },
+        {
+          "name": "iodized salt",
+          "component": null
+        },
+        {
+          "name": "colour 150a",
+          "component": null
+        },
+        {
+          "name": "colour 150d",
+          "component": null
+        },
+        {
+          "name": "edible vegetable oil (palmolein)",
+          "component": null
+        },
+        {
+          "name": "cream flavouring (nature identical & artificial)",
+          "component": null
+        },
+        {
+          "name": "vitamins (fortification blend)",
+          "component": null
+        },
+        {
+          "name": "antioxidant 307b",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "wheat",
+        "barley"
+      ],
+      "allergens_may_contain": [
+        "soy",
+        "milk",
+        "oats",
+        "nut"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 30,
+          "unit": "g"
+        },
+        "servings_per_pack": null,
+        "values": {
+          "energy_kcal": 373,
+          "energy_from_fat_kcal": 27,
+          "protein_g": 9.0,
+          "carbohydrate_g": 81.0,
+          "total_sugars_g": 27.5,
+          "added_sugars_g": 27.0,
+          "dietary_fibre_g": 7.0,
+          "total_fat_g": 3.0,
+          "saturated_fat_g": 1.2,
+          "mono_unsaturated_fat_g": 1.0,
+          "poly_unsaturated_fat_g": 0.8,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 250
+        },
+        "fortification": {
+          "vitamin_c_mg": 10.0,
+          "vitamin_b1_mg": 0.7,
+          "vitamin_b2_mg": 8.57,
+          "vitamin_b3_mg": 5.0,
+          "vitamin_b6_mg": 1.3,
+          "vitamin_b12_ug": 0.33,
+          "folate_ug": 48.3,
+          "iron_mg": 6.7,
+          "calcium_mg": 700.0,
+          "zinc_mg": 2.0
+        },
+        "per_serve_with_200ml_cows_milk": {
+          "energy_kcal": 258
+        }
+      },
+      "description": "Kellogg's Multigrain Chocos \u2014 chocolatey multigrain cereal (wheat, jowar, corn, rice), no maida, no added preservatives, high in protein/fibre/calcium/iron.",
+      "source_url": "https://instamart.in/item/RRUDV953S6",
+      "fssai_license": "10013022002031"
+    },
+    {
+      "product_id": "kissan_fresh_tomato_ketchup",
+      "name": "Kissan Fresh Tomato Ketchup",
+      "brand": "Kissan (HUL)",
+      "category": "sauces_ketchup",
+      "pack_size": {
+        "value": 825,
+        "unit": "g"
+      },
+      "ingredients_raw": "Water, Tomato Paste (28%), Sugar, Iodised Salt, Acidity Regulator - E260, Stabilizers - E1422, E415, Preservative - E211, Onion Powder, Garlic Powder, Spices and Condiments.",
+      "ingredients_parsed": [
+        {
+          "name": "water",
+          "component": null
+        },
+        {
+          "name": "tomato paste",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "acidity regulator E260 (acetic acid)",
+          "component": null
+        },
+        {
+          "name": "stabilizer E1422",
+          "component": null
+        },
+        {
+          "name": "stabilizer E415 (xanthan gum)",
+          "component": null
+        },
+        {
+          "name": "preservative E211 (sodium benzoate)",
+          "component": null
+        },
+        {
+          "name": "onion powder",
+          "component": null
+        },
+        {
+          "name": "garlic powder",
+          "component": null
+        },
+        {
+          "name": "spices and condiments",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 15,
+          "unit": "g"
+        },
+        "servings_per_pack": 57,
+        "values": {
+          "energy_kcal": 133,
+          "protein_g": 1.1,
+          "carbohydrate_g": 31,
+          "total_sugars_g": 29.2,
+          "added_sugars_g": 26,
+          "dietary_fibre_g": 0.6,
+          "total_fat_g": 0.4,
+          "saturated_fat_g": 0.03,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 948
+        }
+      },
+      "description": "Kissan Fresh Tomato Ketchup \u2014 made with 100% real tomatoes, tangy accompaniment to snacks.",
+      "source_url": "https://instamart.in/item/K6LOR1QJ22",
+      "fssai_license": "10013022001897"
+    },
+    {
+      "product_id": "maggi_hot_sweet_sauce",
+      "name": "Maggi Hot & Sweet Chilli Tomato Sauce",
+      "brand": "Maggi (Nestl\u00e9)",
+      "category": "sauces_ketchup",
+      "pack_size": {
+        "value": 500,
+        "unit": "g"
+      },
+      "ingredients_raw": "Water, Sugar, Tomato Paste (11.9%), Red Chilli Puree (6.6%), Iodized Salt, Acidity Regulator (260), Starch, Mixed Spices, Garlic Powder, Thickener (415), Onion Powder and Preservative (211).",
+      "ingredients_parsed": [
+        {
+          "name": "water",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "tomato paste",
+          "component": null
+        },
+        {
+          "name": "red chilli puree",
+          "component": null
+        },
+        {
+          "name": "iodized salt",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 260 (acetic acid)",
+          "component": null
+        },
+        {
+          "name": "starch",
+          "component": null
+        },
+        {
+          "name": "mixed spices",
+          "component": null
+        },
+        {
+          "name": "garlic powder",
+          "component": null
+        },
+        {
+          "name": "thickener 415 (xanthan gum)",
+          "component": null
+        },
+        {
+          "name": "onion powder",
+          "component": null
+        },
+        {
+          "name": "preservative 211 (sodium benzoate)",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": null,
+        "servings_per_pack": null,
+        "values": {
+          "energy_kcal": 135,
+          "protein_g": 0.4,
+          "carbohydrate_g": 33.8,
+          "total_sugars_g": 33.3,
+          "added_sugars_g": 32.0,
+          "total_fat_g": 0.0,
+          "sodium_mg": 807.7
+        },
+        "label_note": "No serving size stated on this label \u2014 only 'per serve' values are given without disclosing the gram basis for a serve."
+      },
+      "description": "Maggi Hot & Sweet Chilli Tomato Sauce \u2014 spicy-tangy blend of tomatoes and red chillies.",
+      "source_url": "https://instamart.in/item/4SSZAT7H3A",
+      "fssai_license": "10012011000168",
+      "data_note": "Same FSSAI license number as Maggi Double Masala Noodles \u2014 expected, both are Nestl\u00e9 India products, not a data error."
+    },
+    {
+      "product_id": "cadbury_dairy_milk",
+      "name": "Cadbury Dairy Milk Chocolate Bar",
+      "brand": "Cadbury (Mondelez)",
+      "category": "chocolate_confectionery",
+      "pack_size": {
+        "value": 112,
+        "unit": "g"
+      },
+      "ingredients_raw": "Sugar, Milk Solids (23%), Cocoa Butter, Cocoa Solids, Fractionated Fat, Emulsifiers (442, 476), Flavours (Natural, Nature Identical and Artificial (Vanilla) Flavouring Substances). Contains Cocoa Butter Equivalent in addition to Cocoa Butter. Allergen Information: Contains Milk, Soy. May Contain Tree Nuts, Wheat, Barley.",
+      "ingredients_parsed": [
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "milk solids",
+          "component": null
+        },
+        {
+          "name": "cocoa butter",
+          "component": null
+        },
+        {
+          "name": "cocoa solids",
+          "component": null
+        },
+        {
+          "name": "fractionated fat",
+          "component": null
+        },
+        {
+          "name": "emulsifier 442 (ammonium phosphatides)",
+          "component": null
+        },
+        {
+          "name": "emulsifier 476 (PGPR)",
+          "component": null
+        },
+        {
+          "name": "natural, nature identical & artificial vanilla flavouring",
+          "component": null
+        },
+        {
+          "name": "cocoa butter equivalent",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "milk",
+        "soy"
+      ],
+      "allergens_may_contain": [
+        "tree nut",
+        "wheat",
+        "barley"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 20,
+          "unit": "g"
+        },
+        "servings_per_pack": 5.5,
+        "values": {
+          "energy_kcal": 531,
+          "protein_g": 7.9,
+          "carbohydrate_g": 60.4,
+          "total_sugars_g": 57.0,
+          "added_sugars_g": 47.4,
+          "total_fat_g": 29.0,
+          "saturated_fat_g": 19.6,
+          "trans_fat_g": 0.1,
+          "cholesterol_mg": 20.7,
+          "sodium_mg": 129
+        }
+      },
+      "description": "Cadbury Dairy Milk Chocolate Bar \u2014 milk chocolate made from sustainably sourced cocoa, suitable for vegetarians.",
+      "source_url": "https://instamart.in/item/592F22CBDU",
+      "fssai_license": "10014022002711"
+    },
+    {
+      "product_id": "amul_dark_chocolate",
+      "name": "Amul Dark Chocolate",
+      "brand": "Amul",
+      "category": "chocolate_confectionery",
+      "pack_size": {
+        "value": 150,
+        "unit": "g"
+      },
+      "ingredients_raw": "Cocoa Solids, Sugar, Cocoa Butter, Emulsifiers (322, 476), Artificial Flavouring Substances (Cocoa, Vanilla).",
+      "ingredients_parsed": [
+        {
+          "name": "cocoa solids",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "cocoa butter",
+          "component": null
+        },
+        {
+          "name": "emulsifier 322 (lecithin)",
+          "component": null
+        },
+        {
+          "name": "emulsifier 476 (PGPR)",
+          "component": null
+        },
+        {
+          "name": "artificial cocoa & vanilla flavouring",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 10,
+          "unit": "g"
+        },
+        "servings_per_pack": 15,
+        "values": {
+          "energy_kcal": 521,
+          "protein_g": 6.4,
+          "carbohydrate_g": 51.4,
+          "total_sugars_g": 43.0,
+          "added_sugars_g": 42.5,
+          "total_fat_g": 33.1,
+          "saturated_fat_g": 18.6,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 38
+        }
+      },
+      "description": "Amul Dark Chocolate \u2014 55% cocoa content, made from premium cocoa beans, intense chocolate flavour.",
+      "source_url": "https://instamart.in/item/E3OVXUUB8Y",
+      "fssai_license": "10012021000071"
+    },
+    {
+      "product_id": "coca_cola_original",
+      "name": "Coca-Cola",
+      "brand": "Coca-Cola",
+      "category": "beverages",
+      "pack_size": {
+        "value": 750,
+        "unit": "ml"
+      },
+      "ingredients_raw": "Carbonated Water, Sugar, Acidity Regulator (338), Caffeine (8.7 mg/100g), Colour (150d), Flavours (Natural Flavouring Substances).",
+      "ingredients_parsed": [
+        {
+          "name": "carbonated water",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 338 (phosphoric acid)",
+          "component": null
+        },
+        {
+          "name": "caffeine",
+          "component": null
+        },
+        {
+          "name": "colour 150d (ammonia sulphite caramel)",
+          "component": null
+        },
+        {
+          "name": "natural flavouring substances",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100ml",
+        "serving_size": {
+          "value": 200,
+          "unit": "ml"
+        },
+        "servings_per_pack": 3.8,
+        "values": {
+          "energy_kcal": 44,
+          "carbohydrate_g": 10.9,
+          "total_sugars_g": 10.6,
+          "added_sugars_g": 10.6,
+          "total_fat_g": 0,
+          "protein_g": 0,
+          "sodium_mg": 8.5,
+          "caffeine_mg": 8.7
+        },
+        "label_note": "Label header shows 'Calories 0' above the nutrition table, which contradicts the table's own 44 kcal/100ml figure directly below it \u2014 likely a template artifact reused incorrectly from a zero-sugar variant's label. The 44kcal figure is treated as correct since it's consistent with the sugar content also shown."
+      },
+      "description": "Coca-Cola \u2014 iconic cola-flavoured carbonated soft drink, contains caffeine.",
+      "source_url": "https://instamart.in/item/B0Z8BDCTUF",
+      "fssai_license": "1001202200061"
+    },
+    {
+      "product_id": "diet_coke",
+      "name": "Diet Coke",
+      "brand": "Coca-Cola",
+      "category": "beverages",
+      "pack_size": {
+        "value": 330,
+        "unit": "ml"
+      },
+      "ingredients_raw": "Carbonated Water, Acidity Regulators (338, 331(iii)), Sweeteners (951, 950), Preservative (211), Caffeine (10 mg/100g), Colour (150d), Flavours (Natural Flavouring Substances).",
+      "ingredients_parsed": [
+        {
+          "name": "carbonated water",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 338 (phosphoric acid)",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 331(iii) (trisodium citrate)",
+          "component": null
+        },
+        {
+          "name": "sweetener 951 (aspartame)",
+          "component": null
+        },
+        {
+          "name": "sweetener 950 (acesulfame potassium)",
+          "component": null
+        },
+        {
+          "name": "preservative 211 (sodium benzoate)",
+          "component": null
+        },
+        {
+          "name": "caffeine",
+          "component": null
+        },
+        {
+          "name": "colour 150d (ammonia sulphite caramel)",
+          "component": null
+        },
+        {
+          "name": "natural flavouring substances",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100ml",
+        "serving_size": {
+          "value": 200,
+          "unit": "ml"
+        },
+        "servings_per_pack": 1.7,
+        "values": {
+          "energy_kcal": 0,
+          "carbohydrate_g": 0,
+          "total_sugars_g": 0,
+          "added_sugars_g": 0,
+          "total_fat_g": 0,
+          "protein_g": 0,
+          "sodium_mg": 8.3,
+          "caffeine_mg": 10
+        }
+      },
+      "description": "Diet Coke \u2014 zero sugar, zero calorie cola with a distinctively crisp, light taste.",
+      "source_url": "https://instamart.in/item/ESO83PE1OK",
+      "fssai_license": "10012022000261"
+    },
+    {
+      "product_id": "real_fruit_power_mixed_fruit_juice",
+      "name": "Real Fruit Power Mixed Fruit Juice",
+      "brand": "Real (Dabur)",
+      "category": "beverages",
+      "pack_size": {
+        "value": 1000,
+        "unit": "ml"
+      },
+      "ingredients_raw": "Water, Sugar, Concentrated Mixed Fruit Juice (8.2%) [From Apple, Orange, Guava, Apricot, Mango, Banana, Lime, Passion Fruit, Pineapple], Acidity Regulator (INS 330), Stabilizer (INS 440), Flavours (Natural and Nature Identical Flavouring Substances), Colour [INS 160a(ii) & (iii)] and Antioxidant (INS 300).",
+      "ingredients_parsed": [
+        {
+          "name": "water",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "concentrated mixed fruit juice (apple, orange, guava, apricot, mango, banana, lime, passion fruit, pineapple)",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 330 (citric acid)",
+          "component": null
+        },
+        {
+          "name": "stabilizer 440 (pectin)",
+          "component": null
+        },
+        {
+          "name": "natural & nature identical flavouring substances",
+          "component": null
+        },
+        {
+          "name": "colour 160a(ii)&(iii) (beta-carotene)",
+          "component": null
+        },
+        {
+          "name": "antioxidant 300 (ascorbic acid / vitamin C)",
+          "component": null
+        }
+      ],
+      "allergens_contains": [],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": false,
+      "nutrition": {
+        "basis": "per_100ml",
+        "serving_size": {
+          "value": 150,
+          "unit": "ml"
+        },
+        "servings_per_pack": 6.7,
+        "values": {
+          "energy_kcal": 52,
+          "protein_g": 0.2,
+          "carbohydrate_g": 12.5,
+          "total_sugars_g": 12.4,
+          "added_sugars_g": 8.3,
+          "total_fat_g": 0,
+          "sodium_mg": 4.7,
+          "iron_mg": 0.2,
+          "vitamin_c_mg": 18,
+          "calcium_mg": 3.2,
+          "potassium_mg": 50
+        }
+      },
+      "description": "Real Fruit Power Mixed Fruit Juice \u2014 blend of 9 fruits, rich in vitamin C, no added preservatives.",
+      "source_url": "https://instamart.in/item/D0P822N87K",
+      "fssai_license": "10012011000618"
+    },
+    {
+      "product_id": "amul_masti_curd",
+      "name": "Amul Masti Set Curd",
+      "brand": "Amul",
+      "category": "dairy",
+      "pack_size": {
+        "value": 1000,
+        "unit": "g"
+      },
+      "ingredients_raw": "Pasteurised Toned Milk, Milk Solids, Active Culture. Allergen Information: Contains Milk.",
+      "ingredients_parsed": [
+        {
+          "name": "pasteurised toned milk",
+          "component": null
+        },
+        {
+          "name": "milk solids",
+          "component": null
+        },
+        {
+          "name": "active culture",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "milk"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 100,
+          "unit": "g"
+        },
+        "servings_per_pack": 10,
+        "values": {
+          "energy_kcal": 65,
+          "protein_g": 4.0,
+          "carbohydrate_g": 4.6,
+          "total_sugars_g": 4.6,
+          "added_sugars_g": 0.0,
+          "total_fat_g": 3.1,
+          "saturated_fat_g": 2.0,
+          "trans_fat_g": 0.0,
+          "cholesterol_mg": 9,
+          "sodium_mg": 50,
+          "calcium_mg": 140
+        }
+      },
+      "description": "Amul Masti Set Curd \u2014 thick, creamy curd made from fresh toned milk.",
+      "source_url": "https://instamart.in/item/TRYAQOGNY9",
+      "fssai_license": "10012021000071"
+    },
+    {
+      "product_id": "cadbury_bournvita_chocolate_drink",
+      "name": "Cadbury Bournvita Chocolate Drink",
+      "brand": "Bournvita (Mondelez)",
+      "category": "health_drink",
+      "pack_size": {
+        "value": 1000,
+        "unit": "g"
+      },
+      "ingredients_raw": "Cereal Extract 58% (Barley, Millets, Wheat), Sugar, Cocoa Solids, Maltodextrin, Colour (150c), Wheat Gluten, Minerals, Liquid Glucose, Emulsifiers (322, 471), Vitamins, Raising Agent (500(ii)), Flavours (Natural, Nature Identical and Artificial (Vanilla) Flavouring Substances), Milk Solids, Iodised Salt. Allergen Information: Contains Milk, Wheat, Barley, Sulphites, Soy.",
+      "ingredients_parsed": [
+        {
+          "name": "cereal extract (barley, millets, wheat)",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "cocoa solids",
+          "component": null
+        },
+        {
+          "name": "maltodextrin",
+          "component": null
+        },
+        {
+          "name": "colour 150c",
+          "component": null
+        },
+        {
+          "name": "wheat gluten",
+          "component": null
+        },
+        {
+          "name": "minerals (fortification blend)",
+          "component": null
+        },
+        {
+          "name": "liquid glucose",
+          "component": null
+        },
+        {
+          "name": "emulsifier 322 (lecithin)",
+          "component": null
+        },
+        {
+          "name": "emulsifier 471",
+          "component": null
+        },
+        {
+          "name": "vitamins (fortification blend)",
+          "component": null
+        },
+        {
+          "name": "raising agent 500(ii)",
+          "component": null
+        },
+        {
+          "name": "natural, nature identical & artificial vanilla flavouring",
+          "component": null
+        },
+        {
+          "name": "milk solids",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "milk",
+        "wheat",
+        "barley",
+        "soy"
+      ],
+      "allergens_may_contain": [
+        "sulphite"
+      ],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 20,
+          "unit": "g"
+        },
+        "servings_per_pack": 50,
+        "values": {
+          "energy_kcal": 381,
+          "protein_g": 7,
+          "carbohydrate_g": 86,
+          "total_sugars_g": 46,
+          "added_sugars_g": 32.2,
+          "dietary_fibre_g": 3.5,
+          "total_fat_g": 1.8,
+          "saturated_fat_g": 0.9,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0.1,
+          "sodium_mg": 175
+        },
+        "fortification": {
+          "vitamin_d2_ug": 18.8,
+          "calcium_mg": 500,
+          "manganese_mg": 1.8,
+          "iodine_ug": 113,
+          "iron_mg": 23,
+          "zinc_mg": 7.4,
+          "vitamin_a_ug": 790,
+          "vitamin_c_mg": 95,
+          "copper_mg": 1.1,
+          "selenium_ug": 19,
+          "biotin_ug": 15,
+          "vitamin_b12_ug": 1.5,
+          "vitamin_b5_mg": 2.5,
+          "vitamin_b9_ug": 75
+        }
+      },
+      "description": "Cadbury Bournvita Chocolate Drink \u2014 2X strength nutrients, scientifically designed formula with calcium, vitamin D, iron, zinc; to be added to milk.",
+      "source_url": "https://instamart.in/item/YNADB1STJ4",
+      "fssai_license": "10014022002711"
+    },
+    {
+      "product_id": "yakult_probiotic_drink",
+      "name": "Yakult Probiotic Drink",
+      "brand": "Yakult",
+      "category": "dairy_probiotic",
+      "pack_size": {
+        "value": 325,
+        "unit": "ml"
+      },
+      "pack_structure": {
+        "unit_size_ml": 65,
+        "units_per_pack": 5
+      },
+      "ingredients_raw": "Water, Sugar, Skimmed Milk Powder, Glucose, Probiotic - Lactobacillus casei strain Shirota, Contains Natural & Nature Identical Flavours.",
+      "ingredients_parsed": [
+        {
+          "name": "water",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "skimmed milk powder",
+          "component": null
+        },
+        {
+          "name": "glucose",
+          "component": null
+        },
+        {
+          "name": "probiotic - lactobacillus casei strain shirota",
+          "component": null
+        },
+        {
+          "name": "natural & nature identical flavours",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "milk"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_serving_only",
+        "serving_size": {
+          "value": 65,
+          "unit": "ml"
+        },
+        "servings_per_pack": 5,
+        "values": {
+          "energy_kcal": 50,
+          "protein_g": 0.8,
+          "carbohydrate_g": 11.5,
+          "total_sugars_g": 10.5,
+          "added_sugars_g": 9.5,
+          "total_fat_g": 0.1,
+          "cholesterol_mg": 0,
+          "sodium_mg": 10.5
+        },
+        "label_note": "Label reports nutrition per single consumption pack (one 65ml bottle), not per-100ml. Values above are per bottle, not scaled.",
+        "probiotic_content": "5 billion L. casei Shirota bacteria per bottle (per app description; not stated on the label crop provided)"
+      },
+      "description": "Yakult Probiotic Drink \u2014 fermented milk drink with L. casei Shirota probiotic strain, supports gut health.",
+      "source_url": "https://instamart.in/item/RFOHL99J55",
+      "fssai_license": "10012011000204"
+    },
+    {
+      "product_id": "britannia_brown_bread",
+      "name": "Britannia Brown Bread",
+      "brand": "Britannia",
+      "category": "bread_bakery",
+      "pack_size": {
+        "value": 400,
+        "unit": "g"
+      },
+      "ingredients_raw": "Water, Wheat Flour (Atta) (32.5%), Refined Wheat Flour (Maida), Yeast, Sugar, Vital Wheat Gluten, Iodised Salt, Refined Palmolein Oil, Preservatives [282 & 200], Colour [150a], Emulsifier [472e], Acidity Regulator [260], Flour Treatment Agent [510] and Vitamins. Contains Wheat.",
+      "ingredients_parsed": [
+        {
+          "name": "water",
+          "component": null
+        },
+        {
+          "name": "wheat flour (atta)",
+          "component": null
+        },
+        {
+          "name": "refined wheat flour (maida)",
+          "component": null
+        },
+        {
+          "name": "yeast",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": null
+        },
+        {
+          "name": "vital wheat gluten",
+          "component": null
+        },
+        {
+          "name": "iodised salt",
+          "component": null
+        },
+        {
+          "name": "refined palmolein oil",
+          "component": null
+        },
+        {
+          "name": "preservative 282 (calcium propionate)",
+          "component": null
+        },
+        {
+          "name": "preservative 200 (sorbic acid)",
+          "component": null
+        },
+        {
+          "name": "colour 150a (plain caramel)",
+          "component": null
+        },
+        {
+          "name": "emulsifier 472e",
+          "component": null
+        },
+        {
+          "name": "acidity regulator 260 (acetic acid)",
+          "component": null
+        },
+        {
+          "name": "flour treatment agent 510 (ammonium chloride)",
+          "component": null
+        },
+        {
+          "name": "vitamins (fortification blend)",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "wheat"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_100g",
+        "serving_size": {
+          "value": 50,
+          "unit": "g"
+        },
+        "servings_per_pack": 8,
+        "values": {
+          "energy_kcal": 246,
+          "protein_g": 7.9,
+          "carbohydrate_g": 51.6,
+          "total_sugars_g": 1.9,
+          "added_sugars_g": 1.9,
+          "dietary_fibre_g": 2.8,
+          "total_fat_g": 1.5,
+          "saturated_fat_g": 0.5,
+          "mono_unsaturated_fat_g": 0.4,
+          "poly_unsaturated_fat_g": 0.6,
+          "trans_fat_g": 0,
+          "cholesterol_mg": 0,
+          "sodium_mg": 542
+        },
+        "fortification": {
+          "vitamin_b1_mg": 0.4,
+          "vitamin_b3_mg": 2.9,
+          "vitamin_b6_mg": 0.3,
+          "folic_acid_ug": 69.6,
+          "vitamin_b12_ug": 0.5
+        }
+      },
+      "description": "Britannia Brown Bread \u2014 classic whole wheat brown bread, no palm oil, enriched with vitamins.",
+      "source_url": "https://instamart.in/item/BKMFCM1D2K",
+      "fssai_license": "10015043001129",
+      "data_note": "App-page sugar figure (3.2g/100g) differs from the printed label's total sugars (1.9g/100g). Label treated as canonical."
+    },
+    {
+      "product_id": "yogabar_daily_protein_bar_dark_chocolate_cranberry",
+      "name": "Yogabar Daily Protein Bar (Dark Chocolate Chip, Cranberry, Date Sweetened)",
+      "brand": "Yogabar",
+      "category": "protein_bar",
+      "pack_size": {
+        "value": 50,
+        "unit": "g"
+      },
+      "ingredients_raw": "Date Paste (33%), Dark Chocolate Paste [(12%) (Sugar, Edible Vegetable Fat, Soy Lecithin & Natural Flavours)], Soy Protein Crisps, Date Syrup, Cocoa Powder, Cashew Paste, Peanut Butter, Texturized Soy Protein Flakes, Milk Protein Concentrate, Almond Paste, Peanut Protein, Cranberry (1.5%), Whey Protein Concentrate, Skim Milk Powder, Choco Chips, Glycerine, Natural Flavours (Vanilla, Rosemary Extract).",
+      "ingredients_parsed": [
+        {
+          "name": "date paste",
+          "component": null
+        },
+        {
+          "name": "sugar",
+          "component": "dark_chocolate_paste"
+        },
+        {
+          "name": "edible vegetable fat",
+          "component": "dark_chocolate_paste"
+        },
+        {
+          "name": "soy lecithin",
+          "component": "dark_chocolate_paste"
+        },
+        {
+          "name": "natural flavours",
+          "component": "dark_chocolate_paste"
+        },
+        {
+          "name": "soy protein crisps",
+          "component": null
+        },
+        {
+          "name": "date syrup",
+          "component": null
+        },
+        {
+          "name": "cocoa powder",
+          "component": null
+        },
+        {
+          "name": "cashew paste",
+          "component": null
+        },
+        {
+          "name": "peanut butter",
+          "component": null
+        },
+        {
+          "name": "texturized soy protein flakes",
+          "component": null
+        },
+        {
+          "name": "milk protein concentrate",
+          "component": null
+        },
+        {
+          "name": "almond paste",
+          "component": null
+        },
+        {
+          "name": "peanut protein",
+          "component": null
+        },
+        {
+          "name": "cranberry",
+          "component": null
+        },
+        {
+          "name": "whey protein concentrate",
+          "component": null
+        },
+        {
+          "name": "skim milk powder",
+          "component": null
+        },
+        {
+          "name": "choco chips",
+          "component": null
+        },
+        {
+          "name": "glycerine",
+          "component": null
+        },
+        {
+          "name": "natural vanilla flavour",
+          "component": null
+        },
+        {
+          "name": "rosemary extract",
+          "component": null
+        }
+      ],
+      "allergens_contains": [
+        "soy",
+        "milk",
+        "peanut",
+        "tree nut"
+      ],
+      "allergens_may_contain": [],
+      "allergen_declaration_present": true,
+      "nutrition": {
+        "basis": "per_serving_only",
+        "serving_size": {
+          "value": 50,
+          "unit": "g"
+        },
+        "servings_per_pack": 1,
+        "values": {
+          "energy_kcal": 190,
+          "protein_g": 10.0,
+          "total_fat_g": 5.3,
+          "saturated_fat_g": 1.8,
+          "mono_unsaturated_fat_g": 2.4,
+          "poly_unsaturated_fat_g": 1.0,
+          "trans_fat_g": 0.0,
+          "cholesterol_mg": 2.1,
+          "carbohydrate_g": 27.5,
+          "dietary_fibre_g": 3.9,
+          "total_sugars_g": 18.5,
+          "added_sugars_g": 15.8,
+          "total_salt_g": 0.3,
+          "sodium_mg": 121.5
+        },
+        "label_note": "Label reports all values per 50g serving only; the whole pack is one serving, so no independently-measured per-100g basis exists."
+      },
+      "description": "Yogabar Daily Protein Bar \u2014 10g protein, dark chocolate and cranberry, date sweetened, no added preservatives.",
+      "source_url": "https://instamart.in/item/039ARVXYTR",
+      "fssai_license": "11222999000656",
+      "data_note": "App-page protein figure (10.9g) differs slightly from label (10.0g/serving). Label treated as canonical."
+    }
+  ]
+}
