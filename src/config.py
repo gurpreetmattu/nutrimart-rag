@@ -9,7 +9,21 @@ import sqlite3
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 from qdrant_client import QdrantClient
+
+# Every ask_*.py/api/main*.py entrypoint already calls load_dotenv() itself
+# before importing this module — but a CLI script that only needs
+# ingestion/DB constants (ingestion/embed_and_upsert.py, load_products.py)
+# never did, since QDRANT_HOST/PORT never needed .env before QDRANT_URL/
+# QDRANT_API_KEY existed. Confirmed real: embed_and_upsert.py silently read
+# an unset QDRANT_URL and fell back to localhost, ingesting into the wrong
+# (local) Qdrant instance instead of the cloud one actually configured in
+# .env. Loading it here, once, guarantees every current and future consumer
+# of this module sees .env's values regardless of whether its own entrypoint
+# remembers to call load_dotenv() first — a second load_dotenv() call
+# upstream is a harmless no-op (it doesn't override already-set values).
+load_dotenv()
 
 # Windows' default console codepage (cp1252) can't encode characters an LLM
 # response may legitimately contain (em dashes, curly quotes, the non-

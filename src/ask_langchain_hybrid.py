@@ -325,7 +325,23 @@ def groq_gateway_invoke(
         # HF's tool-calling doesn't support Groq's strict tool_choice=
         # "required" the same way — "auto" is the honest equivalent for a
         # fallback provider we don't have that same hardening for.
-        hf_chat = hf_chat.bind_tools(tools, tool_choice="auto" if tool_choice == "required" else tool_choice)
+        #
+        # Real bug found live 2026-08-26 (first time this fallback path
+        # actually ran with multiple tools, once Groq's daily quota was
+        # genuinely exhausted): the installed langchain_huggingface's
+        # ChatHuggingFace.bind_tools() raises ValueError for ANY truthy
+        # tool_choice — including "auto" — unless exactly one tool is
+        # bound; this project's agent_tool_routing call always binds all 4
+        # of TOOL_SCHEMAS, so "auto" was never actually valid here. Passing
+        # None when there's more than one tool avoids the incompatibility
+        # entirely (the model still sees every tool and decides freely,
+        # the closest available behavior to "auto"); a genuine single-tool
+        # call (none exist in this codebase today, but the guard costs
+        # nothing) still gets the real tool_choice honored.
+        hf_tool_choice = None
+        if len(tools) == 1:
+            hf_tool_choice = "auto" if tool_choice == "required" else tool_choice
+        hf_chat = hf_chat.bind_tools(tools, tool_choice=hf_tool_choice)
     response = hf_chat.invoke(messages)
     _record_usage_lc(usage_out, call_name, "huggingface", response)
     return response
