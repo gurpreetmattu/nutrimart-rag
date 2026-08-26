@@ -57,7 +57,7 @@ from api.session_store import get_session, save_session
 from conversation.resolve import resolve_followup
 from conversation.state import set_product, default_state
 from generation.consumer_view import to_consumer_friendly
-from eval.phase7_metrics import faithfulness_score
+from eval.faithfulness_score import faithfulness_score
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend-react" / "dist"
 
@@ -165,10 +165,11 @@ def get_product(product_id: str):
 
 def _confidence_breakdown(route: str, chunks: list[dict] | None, answer_technical: str) -> ConfidenceBreakdown:
     """
-    problems.md Section 16: one opaque confidence number isn't as useful
-    as seeing what it's actually made of. Reuses eval/phase7_metrics.py's
+    One opaque confidence number isn't as useful as seeing what it's
+    actually made of. Reuses eval/faithfulness_score.py's
     faithfulness_score() directly for claim_support rather than a second
-    implementation — same function this project's own eval reports use.
+    implementation — the same function generation/groundedness.py's
+    annotation pass already computes as a side effect.
     """
     checked, flagged = faithfulness_score(answer_technical, chunks or [])
     is_sql_route = route in ("product_fact", "product_comparison")

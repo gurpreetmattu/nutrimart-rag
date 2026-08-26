@@ -64,9 +64,7 @@ def _build_sources(answer: str, chunks: list[dict] | None) -> list[Source]:
     Reuses groundedness.py's own citation-parsing internals (the same
     "(source_file.md, heading)" parser it uses to check groundedness) to
     find exactly the chunks the answer actually cites, rather than
-    dumping every retrieved-but-possibly-unused candidate. eval/phase7_metrics.py
-    already reuses these same internals for citation-accuracy scoring — this
-    follows the same established pattern instead of re-deriving the parsing.
+    dumping every retrieved-but-possibly-unused candidate.
     """
     if not chunks:
         return []

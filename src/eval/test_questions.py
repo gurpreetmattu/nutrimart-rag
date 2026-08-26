@@ -1,17 +1,19 @@
 """
-test_questions.py — starter eval set for the naive-vs-hybrid comparison.
+test_questions.py — the eval question set both eval/run_ragas_eval.py
+(hand-rolled harness) and eval/run_real_ragas.py (the real ragas package)
+run against ask_langchain_hybrid.py.
 
 Structure: each question has an `expects` field describing what a correct
 retrieval should surface (prose, for manual reading — kept as-is, this
-predates automated scoring). `difficulty_for_baseline` is a prediction, not
-a measured result — it's what we expect the NAIVE retriever to struggle
-with, based on known baseline design gaps (no doc_type filtering, no
-cross-file/cross-entity linking, no reranking to break score ties). Run
-these against both pipelines once both exist; don't just trust the
-predictions.
-
-Phase 7 (`eval/run_phase7_comparison.py`, `eval/phase7_metrics.py`) adds
-structured fields for automated scoring, only where a question actually
+predates automated scoring). `difficulty_for_baseline` and `expected_route`/
+`relevant_chunks` were originally scored by an automated naive-vs-hybrid
+comparison harness this repo doesn't include (see ARCHITECTURE.md for why
+this repo is LangChain-only) — the fields survive here as still-useful,
+KB-verified ground truth, but nothing in this repo currently scores against
+them automatically. `reference_answer` is the field both eval scripts
+above actually use today (needed to decompose into claims for a
+faithfulness/context-recall pass, not just a prose `expects` description
+meant for manual reading), only present where a question actually
 supports that kind of check:
 - `relevant_chunks` (q01–q09 only): list of (source_file, heading_prefix)
   ground-truth pairs for Recall@k/MRR. Prefixes, not exact headings — some

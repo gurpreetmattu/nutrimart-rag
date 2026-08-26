@@ -365,11 +365,9 @@ budget ledger, since a cache hit never actually reaches the provider.
 
 ## 8. Evaluation
 
-A hand-rolled RAGAS-equivalent harness (`eval/ragas_metrics.py`,
-`eval/run_ragas_eval.py`) — not the `ragas` package itself, since that
-depends on LangChain's own LLM-wrapper abstractions for its judge calls in
-a way that would bypass this project's own quota management. Computes four
-metrics via a decompose-then-verify LLM-as-judge technique:
+Two parallel eval harnesses, both against the same 20-question RAG-eligible
+set (`eval/test_questions.py`), computing the same four metrics via a
+decompose-then-verify LLM-as-judge technique:
 
 - **Faithfulness** — does the generated answer's content hold up against
   the retrieved context (KB chunks *and* any legitimately-cited structured
@@ -381,20 +379,48 @@ metrics via a decompose-then-verify LLM-as-judge technique:
 - **Context recall** — did retrieval surface what a good reference answer
   would need?
 
-Running this harness against real questions found and drove fixes for
+**`eval/ragas_metrics.py` + `eval/run_ragas_eval.py`** — a hand-rolled
+implementation, routed through `generation/gateway.py::complete()` so every
+judge call gets the same multi-key rotation, proactive token-budget
+tracking, and HF fallback as normal pipeline traffic. This is the routine,
+cheap-to-run harness.
+
+**`eval/run_real_ragas.py`** — the actual `ragas` PyPI package, as a
+real second opinion from a community-maintained implementation rather than
+this project's own. Getting it running against this stack required
+working around three real upstream bugs (documented in the script's own
+docstring: an eager, unused `ChatVertexAI` import broken against this
+project's `langchain-community` version; an outdated `instructor` pin;
+`ragas`'s own `provider="groq"` path calling an Anthropic-shaped client
+method) and adding the same multi-key rotation the hand-rolled harness
+gets from the gateway (a single hardcoded key hit Groq's *daily* quota
+mid-run on live testing — the retry/backoff that handles a transient
+per-minute limit is useless against that, rotation is the real fix). A
+full run found a genuine measurement bug in the script itself: it only
+passed retrieved KB chunks as context to the judge, so every claim
+legitimately grounded in `products.sqlite` instead (a structured-tool
+prefix, or a known_facts value woven into the prose) was scored as
+unsupported — not a real faithfulness problem, a context the judge was
+never shown. Fixing that moved the measured faithfulness score from 0.712
+to 0.941 on the same 18 questions, with the answers themselves unchanged
+— see `ragas_real_report.md` for the full run and its own Notes section.
+
+Running these harnesses against real questions found and drove fixes for
 several real bugs during development — a regression in a query-rewriting
 tool schema, an ingredient-matching gap, three routing/tool-selection
 gaps, and a retrieval-filtering bug (the compound-`ins_no` issue mentioned
 in §2.2) that had been silently excluding every multi-code KB entry from
 retrieval. This is the pattern this project follows generally: eval isn't
 a report generated once at the end, it's a tool that actively surfaces
-where the system is actually wrong.
+where the system is actually wrong — including bugs in the eval tooling
+itself, not just the pipeline it's measuring.
 
 Offline regression tests (no LLM/network cost — pure-function checks with
 fixture data, or LLM calls monkeypatched to cost nothing) exist per module
 and are run any time that module changes: retrieval fusion/exclusion
 logic, the consistency false-positive fixes, the token-budget ledger, the
-security guardrails below, and the RAGAS metrics' own scoring functions.
+security guardrails below, and the hand-rolled RAGAS metrics' own scoring
+functions.
 
 ---
 

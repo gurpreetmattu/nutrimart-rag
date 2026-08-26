@@ -191,10 +191,10 @@ def _match_chunks(citations: list[tuple[str, str]], chunks: list[dict]) -> list[
     heading character after the prefix, "0", is alphanumeric, so the
     boundary check rejects it). This only ever adds matches on top of the
     original exact-match behavior — it never rejects a citation the old
-    logic would have matched — so it's safe for `phase7_metrics.py`'s
-    citation-accuracy/faithfulness scoring, which reuses this function
-    directly: previously-passing cases keep passing, previously-missed
-    cases (irregular headings, minor format drift) now can too.
+    logic would have matched — so it's safe for other code that reuses
+    this function directly (e.g. eval/faithfulness_score.py's scoring):
+    previously-passing cases keep passing, previously-missed cases
+    (irregular headings, minor format drift) now can too.
     """
     matched = []
     for source_file, ref in citations:

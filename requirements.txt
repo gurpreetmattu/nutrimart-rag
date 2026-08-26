@@ -23,3 +23,7 @@ langfuse
 # have instructor.Provider.GENAI, which ragas's code references unconditionally).
 ragas>=0.4.3
 instructor>=1.15.0
+# Used directly (AsyncOpenAI, pointed at Groq's OpenAI-compatible endpoint
+# -- see run_real_ragas.py's docstring for why) -- declared explicitly
+# rather than relying on it arriving transitively via ragas/langchain_openai.
+openai

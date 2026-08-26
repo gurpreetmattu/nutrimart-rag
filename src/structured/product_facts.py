@@ -13,8 +13,12 @@ generation/llm.py.
 import json
 import re
 import sqlite3
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from routing.query_router import NUTRITION_FIELD_PATTERNS
 from structured.product_ingredients import INS_CODE_RE
 
 _INS_NAME_INDEX: dict[str, list[str]] | None = None
@@ -70,12 +74,6 @@ def _get_ins_name_index() -> dict[str, list[str]]:
 
     _INS_NAME_INDEX = index
     return index
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from routing.query_router import NUTRITION_FIELD_PATTERNS
 
 
 NUTRITION_FIELDS = {field for _, field in NUTRITION_FIELD_PATTERNS}
