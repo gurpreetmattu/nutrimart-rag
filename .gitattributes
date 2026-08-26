@@ -1,0 +1,12 @@
+# Normalize line endings to LF in the repo regardless of the checkout
+# platform's own git config — avoids the whole-file-rewrite diffs that
+# happen when Windows and Unix contributors' autocrlf settings disagree.
+* text=auto eol=lf
+
+# Binary assets: no line-ending conversion, ever.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg binary
+*.ico binary
+*.sqlite binary
