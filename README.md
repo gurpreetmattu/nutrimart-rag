@@ -11,6 +11,11 @@ This is the LangChain half of a larger portfolio project that also
 includes hand-rolled (no-framework) pipelines as a comparison baseline —
 this repo contains only the LangChain-native side.
 
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for a full deep dive: the data,
+the request flow, hybrid retrieval, groundedness/consistency checking,
+conversation memory, the LangChain integration itself, evaluation, and the
+design decisions behind each piece (including what was tried and reverted).
+
 ## Architecture
 
 - **`ask_langchain.py`** — a naive pipeline: dense-only retrieval via a
