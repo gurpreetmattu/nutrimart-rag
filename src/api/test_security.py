@@ -1,7 +1,7 @@
 """
 api/test_security.py — regression tests for api/security.py's guardrails
 (rate limiting, prompt-injection heuristic) plus the query length bound
-enforced by ChatRequest in api/main.py.
+enforced by ChatRequest in api/main_langchain.py.
 
 No pytest in this project (see CLAUDE.md) — plain assertions + a __main__
 runner, same convention as eval/run_eval.py. All cases here are pure
@@ -98,11 +98,11 @@ check("a different client is not affected by another client's limit", allowed)
 allowed, _ = check_rate_limit(client, now=now + RATE_LIMIT_WINDOW_SECONDS + 1)
 check("request allowed again after the window elapses", allowed)
 
-# --- ChatRequest: query length bound (Pydantic Field bound in main.py) ---
-# Imported lazily/separately since api.main has heavier imports; importing
-# it here still doesn't trigger model loading (that only happens in the
-# lifespan handler, not at import time — see main.py's own comment).
-from api.main import ChatRequest  # noqa: E402
+# --- ChatRequest: query length bound (Pydantic Field bound in main_langchain.py) ---
+# Imported lazily/separately since api.main_langchain has heavier imports;
+# importing it here still doesn't trigger model loading (that only happens
+# in the lifespan handler, not at import time — see that file's own lifespan).
+from api.main_langchain import ChatRequest  # noqa: E402
 
 try:
     ChatRequest(query="a" * 1001)
