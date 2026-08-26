@@ -22,7 +22,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
 
-from config import COLLECTION_NAME, EMBEDDING_MODEL, EMBEDDING_DIM, QDRANT_HOST, QDRANT_PORT, get_qdrant_client
+from config import COLLECTION_NAME, EMBEDDING_MODEL, EMBEDDING_DIM, QDRANT_HOST, QDRANT_PORT, QDRANT_URL, get_qdrant_client
 from parse_kb import parse_all_kb_files, Chunk
 
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     print(f"\nLoading embedding model ({EMBEDDING_MODEL})... this downloads ~130MB on first run.")
     model = SentenceTransformer(EMBEDDING_MODEL)
 
-    print(f"\nConnecting to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}...")
+    print(f"\nConnecting to Qdrant at {QDRANT_URL or f'{QDRANT_HOST}:{QDRANT_PORT}'}...")
     client = get_qdrant_client()
     ensure_collection(client, recreate=True)
 
