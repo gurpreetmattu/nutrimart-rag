@@ -88,41 +88,67 @@ bundle: `cd frontend-react && npm run dev` (proxies `/api` to
 `http://127.0.0.1:8000`, see `vite.config.js`) while `api/main.py` runs
 separately.
 
-## Deploy (Railway)
+## Deploy (Google Cloud Run)
 
 The `Dockerfile` builds the React frontend and the Python app into one
-image, and `products.sqlite` is built at image-build time (deterministic,
-offline data — no network needed).
+image; `products.sqlite` and both ML models (the bge embedder and the
+cross-encoder reranker) are baked in at build time, so a cold start never
+depends on Hugging Face Hub's availability/speed at runtime.
 
 **Qdrant is not embedded in this image.** It's a separate, stateful
-service — point the app at a managed instance instead of trying to run
+service — point the app at a managed instance rather than trying to run
 Qdrant inside the same container:
 
 1. Provision Qdrant somewhere reachable over HTTPS — [Qdrant Cloud's free
-   tier](https://cloud.qdrant.io) is the simplest option; a Railway Qdrant
-   template works too.
-2. Set `QDRANT_URL` (and `QDRANT_API_KEY` if required) as environment
-   variables on the Railway service, alongside `GROQ_API_KEY`/`HF_TOKEN`.
-3. **Before the app can answer anything**, run the ingestion step once
-   against that Qdrant instance — `python src/ingestion/embed_and_upsert.py
+   tier](https://cloud.qdrant.io) is the simplest option.
+2. **Before the app can answer anything**, run the ingestion step once
+   against that instance — `python src/ingestion/embed_and_upsert.py
    data/raw` with `QDRANT_URL`/`QDRANT_API_KEY` set locally (pointing at
-   the same instance), or as a one-off Railway run. It recreates the whole
-   collection each run, so it only needs to be run once (or again after a
-   `data/raw/*.md` edit).
-4. Deploy: Railway auto-detects the `Dockerfile`/`railway.toml`, injects
-   `$PORT`, and the container's `CMD` binds to it automatically.
+   the same instance). It recreates the whole collection each run, so it
+   only needs to be run once (or again after a `data/raw/*.md` edit).
+
+Then deploy the container:
+
+1. Push this repo to GitHub (Cloud Run's "Continuously deploy from a
+   repository" source builds straight from a connected repo via Cloud
+   Build — no manual image push needed).
+2. Cloud Run Console → **Create service** → connect the GitHub repo →
+   Cloud Build auto-detects the `Dockerfile`.
+3. **Region**: pick whichever is closest to your users (lower latency) —
+   e.g. `asia-south1` (Mumbai) for India.
+4. **Billing**: request-based works fine for a portfolio/demo project —
+   you're only billed while a request is actually being handled, and
+   min-instances=0 means it can scale to zero between requests.
+5. **Container**: port `8080` (Cloud Run's `$PORT` — the `Dockerfile`'s
+   `CMD` already reads `$PORT`, no change needed), **memory: 1 GiB**,
+   **1 CPU**. 1 GiB is the number that matters most — see the note below.
+6. **Environment variables**: paste every var from your `.env`
+   (`GROQ_API_KEY*`, `HF_TOKEN`, `QDRANT_URL`, `QDRANT_API_KEY`, optional
+   `LANGFUSE_*`) into the service's Variables tab — one name/value pair
+   per row, the Console has no bulk `.env`-file paste.
+7. **Execution environment**: Second generation (needed for the full
+   Linux syscall surface `torch`/`sentence-transformers` use).
+8. Deploy. Traffic auto-routes to the newest revision by default.
 
 To deploy `api/main_langchain.py` (the no-frontend, +observability API) as
-its own Railway service from the same image, override the service's start
-command to:
+its own Cloud Run service from the same image/repo, override that
+service's container start command to:
 ```
 uvicorn api.main_langchain:app --host 0.0.0.0 --port $PORT --app-dir src
 ```
 
-`products.sqlite` is baked into the image at build time, so a Railway
-redeploy always ships fresh product data with no separate migration step —
-only Qdrant's content needs the manual one-time (or KB-edit-triggered) sync
-above.
+**Why 1 GiB memory, specifically:** this was hit as a real deploy failure,
+not a guess. An earlier attempt on Render's free tier (512 MB) OOM-killed
+(exit 137) on real queries that load both the embedding model and the
+cross-encoder into memory at once — confirmed via Render's event log, and
+reproduced/fixed locally with `docker run --memory=512m` before moving
+platforms rather than just raising the limit blind. Cloud Run's 1 GiB tier
+runs the same image with comfortable headroom; verified live post-deploy
+with the same query class that broke the 512 MB tier (see the note below).
+
+`products.sqlite` is baked into the image at build time, so every deploy
+ships fresh product data with no separate migration step — only Qdrant's
+content needs the manual one-time (or KB-edit-triggered) sync above.
 
 ## Eval
 

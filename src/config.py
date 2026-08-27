@@ -46,8 +46,8 @@ EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
 EMBEDDING_DIM = 384  # bge-small's output dimension — must match collection config
 
 # Local dev default (docker-compose's qdrant service) stays a bare host/port
-# pair with no auth, unchanged from before. A deployed environment (Railway,
-# Qdrant Cloud, any managed instance) instead sets QDRANT_URL — a full
+# pair with no auth, unchanged from before. A deployed environment (Cloud
+# Run, Qdrant Cloud, any managed instance) instead sets QDRANT_URL — a full
 # https://... URL, optionally with QDRANT_API_KEY — since a managed instance
 # is never reachable at "localhost" and almost always requires an API key.
 # get_qdrant_client() below picks whichever is configured; nothing changes
@@ -57,10 +57,11 @@ QDRANT_PORT = int(os.environ.get("QDRANT_PORT", "6333"))
 QDRANT_URL = os.environ.get("QDRANT_URL")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
 
-# src/config.py -> parent is src/, parent.parent is the project root. A
-# deployed environment without a persistent volume at that path can instead
-# set DB_PATH to point at one that is (e.g. a Railway volume mount) — see
-# README's Deploy section.
+# src/config.py -> parent is src/, parent.parent is the project root. The
+# Dockerfile builds products.sqlite into the image at that default path, so
+# a deployed environment normally never needs to set this — DB_PATH exists
+# for the rarer case of pointing at a separately-mounted/persistent path
+# instead. See README's Deploy section.
 DB_PATH = Path(os.environ.get("DB_PATH", str(Path(__file__).resolve().parent.parent / "db" / "products.sqlite")))
 
 # bge models expect this instruction prefix on the QUERY side only, not on

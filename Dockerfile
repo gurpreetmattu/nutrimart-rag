@@ -62,11 +62,11 @@ from sentence_transformers import SentenceTransformer, CrossEncoder; \
 SentenceTransformer('BAAI/bge-small-en-v1.5'); \
 CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')"
 
-# Railway/Render/most PaaS targets inject $PORT at runtime — main.py serves
-# both the built frontend and /api/*, so this is the one process a typical
-# single-service deploy needs. To deploy api/main_langchain.py instead (the
-# no-frontend, +observability API on its own service), override this
-# image's start command in your host's service settings rather than
-# rebuilding the image — see README's Deploy section.
+# Cloud Run (and most PaaS targets — Railway, Render) inject $PORT at
+# runtime — main.py serves both the built frontend and /api/*, so this is
+# the one process a typical single-service deploy needs. To deploy
+# api/main_langchain.py instead (the no-frontend, +observability API on its
+# own service), override this image's start command in your host's service
+# settings rather than rebuilding the image — see README's Deploy section.
 EXPOSE 8000
 CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000} --app-dir src"]
