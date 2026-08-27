@@ -1,14 +1,14 @@
 """
 api/resources.py — loads the hybrid pipeline's heavy objects (embedding
 model, Qdrant client, BM25 index, cross-encoder) exactly once at process
-startup, instead of the per-call loading ask_hybrid.py's CLI/eval callers
-do. A live API serving repeated requests can't afford to reload a
-SentenceTransformer and rebuild the BM25 index on every single question.
+startup, instead of per-call. A live API serving repeated requests can't
+afford to reload a SentenceTransformer and rebuild the BM25 index on every
+single question.
 
 Exposes get_resources(), which builds the bundle on first call and caches
 it in a module-level global — src/api/main.py calls this once during its
-FastAPI lifespan startup and passes the bundle into ask_hybrid()/
-retrieve_hybrid_with_retry()'s new optional `resources` parameter.
+FastAPI lifespan startup and passes the bundle into ask()/
+retrieve_hybrid_with_retry()'s `resources` parameter.
 """
 import sys
 from pathlib import Path

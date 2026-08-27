@@ -1,24 +1,22 @@
 """
-agent/tools.py — tool schemas + dispatch for ask_hybrid.py's tool-calling
-loop (replaces routing/query_router.py::classify_intent() and its phrase
-tables — see PHASE3_TESTING_LOG.md and the 2026-08-21 plan for why: every
-routing bug that session was the same failure mode, a keyword list that
-didn't anticipate one phrasing, which is structurally unfixable by adding
-more phrases).
+agent/tools.py — tool schemas + dispatch for the LLM tool-calling loop
+that routes each question: whole-question keyword matching can't
+anticipate every real phrasing, so a model decision — given a small set
+of well-defined tools — replaces a keyword-table approach structurally
+rather than by adding more phrases to it.
 
 Every tool here is a thin wrapper over an EXISTING, already-correct data
 function — no retrieval/SQL/comparison logic is reimplemented. The model
 decides which tool(s) a question needs; each tool's own Python code still
-does 100% deterministic, grounded lookups against products.sqlite/the KB,
-exactly as before. This file only owns: (1) the JSON schemas the model sees,
-(2) dispatching a structured tool call to the right existing function.
+does 100% deterministic, grounded lookups against products.sqlite/the KB.
+This file only owns: (1) the JSON schemas the model sees, (2) dispatching
+a structured tool call to the right existing function.
 
-search_knowledge_base is NOT dispatched here — it needs ask_hybrid.py's
+search_knowledge_base is NOT dispatched here — it needs the pipeline's own
 loaded resources (qdrant client, bm25 index, cross-encoder) and calling
-retrieve_hybrid_with_retry() from here would create a circular import
-(ask_hybrid.py -> agent.tools -> ask_hybrid.py). ask_hybrid.py's loop
-special-cases that one tool name directly; this module only defines its
-schema for the model to see.
+retrieve_hybrid_with_retry() from here would create a circular import.
+The pipeline's own routing loop special-cases that one tool name directly;
+this module only defines its schema for the model to see.
 """
 import sqlite3
 
@@ -159,23 +157,21 @@ TOOL_SCHEMAS = [
 # of the two chunks this exact question was built around
 # (`nutrition_knowledge_base.md` Chunk 8c + `fssai_knowledge_base.md`
 # Chunk 5, both tagged `comparison_group: "sugar_vs_sweetener"`), silently
-# defeating the comparison_group rescue mechanism (Finding 16) — which was
-# built and verified against the LITERAL query text, before the LLM
-# tool-calling migration (Finding 25) made query rewriting possible at
-# all. Both ask_hybrid.py and ask_langchain_hybrid.py's tool-dispatch loops
-# were changed to always retrieve using the real, already-follow-up-
-# resolved user question instead of trusting this argument — any further
+# defeating the comparison_group rescue mechanism — which needs the
+# LITERAL query text to match its pre-authored tags. The tool-dispatch
+# loop always retrieves using the real, already-follow-up-resolved user
+# question instead of trusting a model-rewritten argument — any further
 # reformulation still happens, just through retrieve_hybrid_with_retry()'s
-# own separately-tuned rewrite_query() corrective-retry step (Finding 7),
-# not an unconstrained rewrite made before retrieval even starts once.
+# own separately-tuned rewrite_query() corrective-retry step, not an
+# unconstrained rewrite made before retrieval even starts once.
 
 # Exact-match sentinel dispatch_structured_tool returns when a
-# product-specific tool is called with no product resolved — ask_hybrid.py
-# detects this string to trigger the search_knowledge_base fallback below
-# (2026-08-21 fix, see ask_hybrid.py's loop for why: the model sometimes
-# calls a structured tool anyway for a context-free question despite the
-# system prompt saying not to, and this used to be returned straight to
-# the user as a dead-end instead of falling back to retrieval).
+# product-specific tool is called with no product resolved — the pipeline's
+# routing loop detects this string to trigger the search_knowledge_base
+# fallback below (the model sometimes calls a structured tool anyway for a
+# context-free question despite the system prompt saying not to, and this
+# used to be returned straight to the user as a dead-end instead of
+# falling back to retrieval).
 NO_PRODUCT_CONTEXT_MESSAGE = "[UNCERTAIN] No product is currently in context to look this up for."
 
 # criterion arg (model-facing) -> internal criterion key structured/product_comparison.py expects

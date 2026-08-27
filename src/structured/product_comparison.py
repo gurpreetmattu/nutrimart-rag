@@ -1,12 +1,11 @@
 """
-structured/product_comparison.py — problems.md Problem 8/Section 14: "What
-is the alternative to this?" is a product-recommendation question, not a
-knowledge-base question. Same no-LLM-call, direct-SQL pattern as
-structured/product_facts.py (reuses its NUTRITION_LABELS rather than
-re-deriving unit/label text) — routing/query_router.py::classify_intent()
-routes "alternative_recommendation"/"product_comparison" here directly,
-bypassing KB retrieval entirely, the same short-circuit shape ask_hybrid.py
-already uses for the product_fact route.
+structured/product_comparison.py — "What is the alternative to this?" is a
+product-recommendation question, not a knowledge-base question. Same
+no-LLM-call, direct-SQL pattern as structured/product_facts.py (reuses its
+NUTRITION_LABELS rather than re-deriving unit/label text) — the
+compare_products tool (agent/tools.py) dispatches here directly, bypassing
+KB retrieval entirely, the same short-circuit shape the product_fact route
+uses.
 
 No `price` column exists in products.sqlite (confirmed against the real
 schema) — comparisons are limited to what's actually stored: category and
@@ -41,8 +40,8 @@ _CRITERION_PHRASES: dict[str, list[str]] = {
 def infer_criterion(query: str, active_attribute: str | None) -> str:
     """
     Confirmed real bug 2026-08-21: this used to only look at
-    conversation_state's active_attribute (problems.md Section 14's
-    default-to-topic-in-focus behavior) and never the query text itself —
+    conversation_state's active_attribute (a default-to-topic-in-focus
+    behavior) and never the query text itself —
     so "compare these products by sugar" was silently ignored and always
     fell back to the generic same_category listing, identically on every
     call, regardless of what the user actually typed. Explicit text takes

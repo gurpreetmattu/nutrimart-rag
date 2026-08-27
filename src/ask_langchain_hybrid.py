@@ -1,71 +1,57 @@
 """
-ask_langchain_hybrid.py — LangChain-native pipeline with full behavioral
-parity to ask_hybrid.py (Phase 5 hybrid + conversation layer). Sits
-alongside ask.py, ask_hybrid.py, and ask_langchain.py (the naive LangChain
-demo) — none of those files are touched by this one.
-
-Scope: this ports EVERYTHING ask_hybrid.py does — BM25+dense fusion,
-cross-encoder reranking, corrective retry/query rewriting, the
+ask_langchain_hybrid.py — the full LangChain-native pipeline: BM25+dense
+fusion, cross-encoder reranking, corrective retry/query rewriting, the
 comparison_group override, groundedness checking, LLM tool-calling agent
-routing, conversation state/follow-up resolution, the health-judgment and
+routing, conversation state/follow-up resolution, health-judgment and
 composition-verdict regex safety-nets, and cross-turn consistency
-checking — requested explicitly as "full parity," not the narrower 6-item
-cut ask_langchain.py's naive version would have needed.
+checking. Sits alongside `ask_langchain.py` (a naive, dense-only demo
+pipeline) — that file is untouched by this one.
 
 How this is actually "LangChain," honestly stated:
   - The two places an LLM makes a real DECISION are LangChain-native:
     tool-routing and final-answer generation, both issued through
-    groq_gateway_invoke() below rather than gateway.complete_raw()/
-    complete(). This is a LangChain-native reimplementation of
-    generation/gateway.py's FULL behavior, not just the Groq-then-HF
-    fallback: multi-key rotation (generation/gateway.py::_load_groq_api_keys,
-    reused directly) and the proactive per-key daily token-budget ledger
+    groq_gateway_invoke() below. This is a LangChain-native
+    implementation of the full gateway behavior, not just a
+    Groq-then-HF fallback: multi-key rotation
+    (generation/gateway.py::_load_groq_api_keys, reused directly) and the
+    proactive per-key daily token-budget ledger
     (generation/token_budget.py, reused directly — has_budget()/
-    record_actual_usage() are the SAME ledger file gateway.py's own calls
-    write to, so ask_hybrid.py and this pipeline share one real quota
-    picture, not two independently-tracked ones) both apply here, then
-    falls back to a HuggingFace ChatHuggingFace model (LangChain-native)
-    only once every configured key is proactively judged over-budget or
-    actually rate-limited — same three-layer shape gateway.py's
-    complete_raw() has (proactive skip -> reactive RateLimitError catch ->
-    HF fallback), reusing its own key list and budget ledger rather than
-    re-deriving a second, divergent copy of either.
+    record_actual_usage() are the same ledger file the rest of the app
+    writes to, so every LLM call in this project shares one real quota
+    picture) both apply here, then falls back to a HuggingFace
+    ChatHuggingFace model (LangChain-native) only once every configured
+    key is proactively judged over-budget or actually rate-limited —
+    proactive skip -> reactive RateLimitError catch -> HF fallback,
+    reusing the gateway's own key list and budget ledger rather than
+    deriving a second, divergent copy of either.
   - Every piece of business logic that ISN'T itself an LLM call — BM25
     fusion, RRF, cross-encoder reranking, the comparison_group tag match,
     doc_type/ingredient-entity scoping, structured SQL tool dispatch,
     conversation-state bookkeeping, follow-up resolution, the
     health-judgment/composition-verdict/compound-clause regex patterns,
-    and consistency checking — is REUSED DIRECTLY from the existing,
-    already-verified modules (retrieval/search_hybrid.py, agent/tools.py,
-    conversation/state.py, conversation/resolve.py,
-    generation/consistency.py, ask_hybrid.py's own module-level regex
-    constants). Reimplementing correct, already-tested pure logic a
-    second time in "LangChain style" would add risk (a second, divergent
-    copy of hard-won bug fixes like Finding 16's comparison_group
-    same-file false-positive fix) without adding anything LangChain
-    actually contributes — LangChain has no abstraction for "cross-encoder
-    rerank a fused RRF pool" or "does this query mention a health
-    condition," these are just Python.
+    and consistency checking — lives in its own already-verified modules
+    (retrieval/search_hybrid.py, agent/tools.py, conversation/state.py,
+    conversation/resolve.py, generation/consistency.py, hybrid_core.py's
+    module-level regex constants) and is called directly rather than
+    forced into a "LangChain style" reimplementation — LangChain has no
+    abstraction for "cross-encoder rerank a fused RRF pool" or "does this
+    query mention a health condition," these are just Python.
   - retrieve_hybrid_with_retry() itself (corrective retry + rewrite_query
     + comparison_group override) is imported directly from hybrid_core.py
-    rather than rebuilt — it already accepts a `resources` dict for
-    caller-supplied model/index instances, which is exactly what this
-    file's LangChain retriever wrapper constructs. rewrite_query() (the
-    corrective-retry query rewrite) also stays on generation/llm.py's
-    existing gateway-backed implementation rather than being re-plumbed
-    through ChatGroq — it has a specific, tested empty-string-fallback
-    fix (see llm.py's docstring) that's tuned to this exact model's
-    behavior; duplicating it via a second call path risks losing that fix
-    silently.
+    — it already accepts a `resources` dict for caller-supplied
+    model/index instances, which is exactly what this file's LangChain
+    retriever wrapper constructs. rewrite_query() (the corrective-retry
+    query rewrite) also stays on generation/llm.py's existing
+    gateway-backed implementation rather than being re-plumbed through
+    ChatGroq — it has a specific, tested empty-string-fallback fix (see
+    llm.py's docstring) that's tuned to this exact model's behavior;
+    duplicating it via a second call path risks losing that fix silently.
 
-Not a fork of ask_hybrid.py's file — a separate entrypoint that imports
-and reuses hybrid_core.py's shared logic directly (retrieve_hybrid_with_retry,
-its module-level regex constants, RERANK_SCORE_THRESHOLD,
-INSUFFICIENT_EVIDENCE_MESSAGE — extracted from ask_hybrid.py 2026-08-26
-specifically so this file doesn't need to depend on that one) rather than
-copy-pasting them, so a future
-fix to that shared logic doesn't silently diverge between the two
-pipelines.
+This file imports and reuses hybrid_core.py's shared logic directly
+(retrieve_hybrid_with_retry, its module-level regex constants,
+RERANK_SCORE_THRESHOLD, INSUFFICIENT_EVIDENCE_MESSAGE) rather than
+copy-pasting them, so a future fix to that shared logic can't silently
+diverge from what this pipeline actually runs.
 """
 import json
 import os
@@ -109,10 +95,7 @@ from agent.tools import TOOL_SCHEMAS, STRUCTURED_TOOL_NAMES, dispatch_structured
 from timing import timed
 
 # Reused directly from hybrid_core.py (not duplicated) — see that module's
-# docstring on why duplicating these would be a real risk, not a style
-# choice, and why this import no longer needs to reach into ask_hybrid.py
-# itself (2026-08-26 — hybrid_core.py was extracted specifically so this
-# pipeline doesn't depend on that hand-rolled-pipeline file).
+# docstring for the retrieval-decision logic this pipeline depends on.
 from hybrid_core import (
     retrieve_hybrid_with_retry, _TOOL_TOPIC, _HEALTH_JUDGMENT_RE, _COMPOSITION_VERDICT_RE,
     _REGULATORY_LIMIT_RE, _CLAIM_ELIGIBILITY_RE, _DIETARY_CLASSIFICATION_RE,
@@ -125,8 +108,8 @@ GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 HF_MODEL = "Qwen/Qwen2.5-72B-Instruct"  # same fallback model gateway.py uses, see its docstring for why
 GENERATION_REASONING_EFFORT = "low"  # same real-data-backed default as generation/llm.py
 
-# Global exact-match response cache — a LangChain-native feature
-# generation/gateway.py's hand-rolled call layer has no equivalent of.
+# Global exact-match response cache — a LangChain-native feature this
+# pipeline's other call layers don't have an equivalent of.
 # set_llm_cache() intercepts EVERY BaseChatModel.invoke()/.stream() call
 # (ChatGroq and ChatHuggingFace both qualify) before it reaches the
 # network: an identical (prompt, model, params) tuple returns the cached
@@ -263,13 +246,13 @@ def groq_gateway_invoke(
     tool_choice: str | None = None, usage_out: list | None = None,
 ) -> AIMessage:
     """
-    LangChain-native port of generation/gateway.py::complete_raw() — same
-    layered shape: proactive per-key budget skip -> reactive
-    GroqRateLimitError catch (next key) -> GroqBadRequestError
-    "tool_use_failed" retry, then downgrade to tool_choice="auto" (a real,
-    reproducible Groq constrained-decoding failure on subjective/
-    evaluative questions — see ask_hybrid.py's comment at its tool-routing
-    call site) -> HuggingFace fallback. Reuses gateway.py's own
+    LangChain-native version of the same layered call shape
+    generation/gateway.py::complete_raw() uses: proactive per-key budget
+    skip -> reactive GroqRateLimitError catch (next key) ->
+    GroqBadRequestError "tool_use_failed" retry, then downgrade to
+    tool_choice="auto" (a real, reproducible Groq constrained-decoding
+    failure on subjective/evaluative questions) -> HuggingFace fallback.
+    Reuses gateway.py's own
     _load_groq_api_keys() and token_budget.py's ledger directly
     (has_budget()/record_actual_usage()) rather than a second, divergent
     copy of either — writes to and reads from the same
@@ -507,8 +490,7 @@ class _RouteResult:
     generate_answer_lc_stream() with `resolved_query`/`chunks`/
     `known_facts`/`structured_context`; `verdict_mode=True` marks the
     composition-verdict case, where groundedness checking is skipped
-    (there are no retrieved chunks to check claims against — see
-    ask_hybrid.py's own comment at this exact branch) and the caller
+    (there are no retrieved chunks to check claims against) and the caller
     should report `chunks=None`, not `[]`, in any return_chunks tuple.
     """
 
@@ -532,10 +514,10 @@ def _route_and_retrieve(
 ) -> _RouteResult:
     """
     Routing -> agent tool-call decision -> structured dispatch / hybrid
-    retrieval, i.e. everything in ask_hybrid.py::ask_hybrid() before its
-    final generate_answer() call. See _RouteResult's docstring for why
-    this is split out. Owns opening/closing the sqlite connection for its
-    own lifetime — callers never see it.
+    retrieval, i.e. everything before the final generate_answer_lc() call.
+    See _RouteResult's docstring for why this is split out. Owns
+    opening/closing the sqlite connection for its own lifetime — callers
+    never see it.
     """
     resolved_query = resolve_followup(query, conversation_state) if conversation_state is not None else query
 
@@ -579,10 +561,9 @@ def _route_and_retrieve(
     tool_calls = decision.tool_calls or []
 
     if not tool_calls:
-        # Same last-resort fallback ask_hybrid.py uses when tool_choice=
+        # Last-resort fallback: retrieve directly when tool_choice=
         # "required" still declines (a real, reproducible Groq behavior on
-        # subjective/evaluative questions under constrained decoding — see
-        # ask_hybrid.py's comment at this exact point).
+        # subjective/evaluative questions under constrained decoding).
         product_ins_codes = get_product_ins_codes(effective_product_id, sqlite_conn) if effective_product_id else None
         chunks = retrieve_hybrid_with_retry(
             resolved_query, product_ins_codes=product_ins_codes, top_k=top_k,
@@ -671,10 +652,12 @@ def _route_and_retrieve(
         if fired_topic:
             set_active_topic(conversation_state, fired_topic)
 
-    # See ask_hybrid.py's matching branch (Finding 40, 2026-08-26) for the
-    # full reasoning on why the extended dietary/nutritional-verdict set
-    # drops the `chunks is None` requirement and directly fetches real
-    # ingredient/allergen data instead of trusting whichever tool fired.
+    # The extended dietary/nutritional-verdict set drops the
+    # `chunks is None` requirement and directly fetches real
+    # ingredient/allergen data instead of trusting whichever tool fired —
+    # the tool-calling model sometimes also calls search_knowledge_base
+    # for these questions, which would otherwise silently gate this path
+    # out even though a real verdict is still needed.
     _extended_verdict_match = (
         _DIETARY_CLASSIFICATION_RE.search(resolved_query) or _NUTRITIONAL_VERDICT_RE.search(resolved_query)
         or _fuzzy_verdict_trigger(resolved_query)
@@ -736,12 +719,10 @@ def ask(
     return_structured_answers: bool = False, return_known_facts: bool = False,
 ) -> str | tuple:
     """
-    Full-parity LangChain port of ask_hybrid.py::ask_hybrid() (a hand-rolled
-    sibling pipeline this repo doesn't include, see ARCHITECTURE.md) — same
-    control flow (routing -> agent tool-call decision -> structured
-    dispatch / hybrid retrieval -> generation -> groundedness ->
-    consistency), same conversation-state contract, same safety-net regex
-    patterns. `return_chunks`/`timing`/`usage`/`tool_trace` are the
+    The full pipeline entrypoint: routing -> agent tool-call decision ->
+    structured dispatch / hybrid retrieval -> generation -> groundedness ->
+    consistency, with a conversation-state contract and safety-net regex
+    patterns throughout. `return_chunks`/`timing`/`usage`/`tool_trace` are the
     observability params api/main.py and api/main_langchain.py actually use
     here; all default to no-op values, so plain `ask(query)` behaves
     identically without them. Routing/retrieval is shared with ask_stream()

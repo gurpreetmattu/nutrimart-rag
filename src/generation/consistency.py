@@ -1,12 +1,12 @@
 """
 generation/consistency.py — checks a freshly-generated answer against
-ConversationState's known_facts (conversation/state.py), for the two real
-failure shapes problems.md Section 10/28 documents:
+ConversationState's known_facts (conversation/state.py), for two real
+failure shapes:
 
 1. "Forgotten fact" — the answer claims a known attribute's value is
    unavailable/not specified, when it was already established earlier
-   this conversation (problems.md's exact worked example: told 43g sugar,
-   then later says "the retrieved data do not specify sugar amounts").
+   this conversation (a real observed case: told 43g sugar, then later
+   says "the retrieved data do not specify sugar amounts").
 2. "Numeric contradiction" — the answer states a different number for the
    attribute currently in focus than what's already known.
 
@@ -119,8 +119,8 @@ def _nearby_same_unit_numbers(block_text: str, positions: list[int], unit_suffix
     """
     Only pulls numbers physically near an attribute-word mention, not every
     number sharing that unit anywhere in the block. Confirmed real false
-    positive 2026-08-20: once get_all_nutrition_facts() (ask_hybrid.py)
-    started injecting a product's full nutrition profile as known_facts at
+    positive 2026-08-20: once get_all_nutrition_facts() started injecting
+    a product's full nutrition profile as known_facts at
     once, a single dense summary sentence naming several gram-denominated
     values together (fat, protein, carbs, sugar all share unit "g") made
     every one of those attributes' checks see every other attribute's

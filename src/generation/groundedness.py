@@ -1,18 +1,16 @@
 """
-groundedness.py — Phase 6 post-generation check: does each cited claim in a
+groundedness.py — post-generation check: does each cited claim in a
 generated answer actually hold up against the chunk it cites?
 
-Hybrid-pipeline only (ask_hybrid.py) — the corrective retry that already
-exists (llm.py::rewrite_query, ask_hybrid.py) catches weak *retrieval*
-before generation; this catches a *generated* claim that isn't actually
-supported by its own cited source, which the retry has no visibility into.
-ask.py stays untouched, same reasoning as the rest of the hybrid-only work.
+The corrective retry that already exists (llm.py::rewrite_query) catches
+weak *retrieval* before generation; this catches a *generated* claim that
+isn't actually supported by its own cited source, which the retry has no
+visibility into.
 
 Scope: this verifies "is this claim entailed by the chunk it cites," not
-"do multiple retrieved chunks conflict with each other" (that's a separate,
-already-tracked open item — see PHASE3_TESTING_LOG.md Finding 4). A claim
-whose own cited source genuinely supports it will pass here even if another
-retrieved chunk states a different number.
+"do multiple retrieved chunks conflict with each other" (a separate,
+still-open item). A claim whose own cited source genuinely supports it
+will pass here even if another retrieved chunk states a different number.
 
 [UNCERTAIN] claims assert nothing to verify, and [DERIVED CALCULATION]
 claims are computed values not expected to be literally entailed by source
@@ -162,8 +160,8 @@ def _extract_citations(block_text: str, chunks: list[dict] | None = None) -> lis
 
 # Strips an accidental "Source N: " prefix that a generation model can glue
 # onto the filename half of a citation (confirmed real, not hypothetical —
-# see PHASE3_TESTING_LOG.md Finding 19: the model echoed the "[Source 2: ...]"
-# context label's own "Source 2:" part into its citation). The prompt-level
+# the model echoed the "[Source 2: ...]" context label's own "Source 2:"
+# part into its citation). The prompt-level
 # fix (llm.py's SYSTEM_PROMPT) addresses the cause; this is a cheap,
 # defense-in-depth normalization so a future model-level regression of the
 # same shape degrades gracefully (a match instead of a silent skip) rather

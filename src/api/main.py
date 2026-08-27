@@ -1,17 +1,7 @@
 """
-api/main.py — Phase 4 HTTP layer: FastAPI app serving the built
-frontend-react/ production bundle (frontend-react/dist), talking to a
+api/main.py — the HTTP layer: FastAPI app serving the built
+frontend-react/ production bundle (frontend-react/dist), talking to the
 RAG pipeline underneath.
-
-**2026-08-24: swapped, at the user's explicit request, from ask_hybrid.py
-(the hand-rolled hybrid pipeline) to ask_langchain_hybrid.py (its
-full-parity LangChain port) — this file now serves the LangChain pipeline
-to the actual frontend UI.** ask_hybrid.py itself is UNTOUCHED and still
-fully functional (CLI, eval scripts, ask_langchain_hybrid.py's own reuse
-of its internals all still work exactly as before) — only this API
-layer's choice of which pipeline answers a live /api/chat request changed.
-Swapping back is a one-line import/call change (see the `ask_langchain_hybrid`
-import below and its call site further down) if that's ever wanted.
 
 Does not reimplement any pipeline logic — every /api/chat call goes
 through the exact same ask_langchain_hybrid.ask()/classify_query() code
@@ -19,11 +9,7 @@ path `python src/ask_langchain_hybrid.py "..."` uses, just with the heavy
 models (embedding model, Qdrant client, BM25 index, cross-encoder)
 preloaded once at startup via api/resources.py instead of reloaded per
 call. See ask_langchain_hybrid.py's own module docstring for what's
-LangChain-native vs. reused directly from ask_hybrid.py's internals.
-
-The original no-build-step vanilla frontend/ (superseded by
-frontend-react/) has been archived to _archive/frontend-vanilla/ rather
-than deleted, since this repo isn't under version control.
+LangChain-native vs. plain Python.
 
 Run with:
     cd frontend-react && npm run build   # rebuild dist/ after any frontend change
@@ -94,8 +80,8 @@ class ConfidenceBreakdown(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    # Consumer-facing by default (problems.md Section 18/30: technical
-    # evidence invisible by default, not deleted) — generation/consumer_view.py's
+    # Consumer-facing by default (technical evidence invisible by default,
+    # not deleted) — generation/consumer_view.py's
     # stripped text, no [TAG] markers or inline citations.
     answer: str
     # The full, unmodified typed-claim/cited text `answer` was derived
@@ -187,9 +173,8 @@ def chat(req: ChatRequest, request: Request):
     # spends real LLM-provider quota per call — /api/products is plain
     # SQLite reads with no such cost. See api/security.py's docstring:
     # this project hit real quota exhaustion multiple times in one day
-    # from its own testing traffic alone (PHASE3_TESTING_LOG.md Findings
-    # 10, 19, 22) — an unrated public endpoint risks the same from a
-    # handful of page refreshes.
+    # from its own testing traffic alone — an unrated public endpoint
+    # risks the same from a handful of page refreshes.
     client_id = request.client.host if request.client else "unknown"
     allowed, retry_after = check_rate_limit(client_id)
     if not allowed:
@@ -245,10 +230,8 @@ def chat(req: ChatRequest, request: Request):
     if req.session_id:
         save_session(req.session_id, state)
 
-    # 2026-08-21: route reporting derived from what ask_langchain_hybrid() actually
-    # did this turn, not a second speculative classify_intent() call —
-    # classify_intent() is retired along with the rest of the keyword
-    # routing it depended on (see the tool-calling migration plan).
+    # Route reporting derived from what ask_langchain_hybrid() actually
+    # did this turn, not a second speculative classification call.
     # classify_query() above still tells us definitively when the cheap
     # deterministic product_fact fast path fired; otherwise, chunks is
     # None exactly when ask_langchain_hybrid()'s tool-calling loop answered entirely

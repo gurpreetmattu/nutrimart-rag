@@ -1,9 +1,7 @@
 """
-eval/run_ragas_eval.py — runs the RAGAS-equivalent metrics
-(eval/ragas_metrics.py) against `ask_langchain_hybrid.py` specifically, not
-`ask_hybrid.py` or `ask.py` (explicit user request, 2026-08-24) — writes a
-markdown report, same convention as benchmark_pipeline.py/
-run_phase7_comparison.py.
+eval/run_ragas_eval.py — runs the RAGAS-style metrics
+(eval/ragas_metrics.py) against `ask_langchain_hybrid.py` and writes a
+markdown report.
 
 Only runs the 20 RAG-eligible questions (q01-q10, q21-q30) — see
 test_questions.py's 2026-08-24 module docstring note for why q12-q20 are
@@ -129,13 +127,12 @@ def run_all(question_ids: list[str]) -> tuple[str, list[dict]]:
 
 def _render_report(rows: list[dict]) -> str:
     lines = [
-        f"# RAGAS-equivalent Evaluation — ask_langchain_hybrid.py — {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+        f"# RAGAS-style Evaluation — ask_langchain_hybrid.py — {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "",
-        "Hand-rolled faithfulness/answer-relevancy/context-precision/context-recall metrics "
-        "(see `eval/ragas_metrics.py`'s module docstring for why hand-rolled instead of the real "
-        "`ragas` package, and the one disclosed simplification vs. its defaults: context precision "
-        "is one batched judge call, not one call per chunk). Run against `ask_langchain_hybrid.py` "
-        "specifically, not `ask_hybrid.py` or `ask.py` — explicit scope for this run.",
+        "Lightweight faithfulness/answer-relevancy/context-precision/context-recall metrics "
+        "(see `eval/ragas_metrics.py`'s module docstring for the one disclosed simplification "
+        "vs. the real `ragas` package's defaults: context precision is one batched judge call, "
+        "not one call per chunk). Run against `ask_langchain_hybrid.py`.",
         "",
         "## Per-question scores",
         "",

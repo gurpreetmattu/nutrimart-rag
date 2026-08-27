@@ -1,8 +1,8 @@
 """
 generation/consumer_view.py — strips the typed-claim/citation internals
-from a generated answer for the DEFAULT consumer-facing view, per
-problems.md Section 18/30: "technical evidence should be invisible by
-default" but not deleted — the full tagged/cited text stays available
+from a generated answer for the DEFAULT consumer-facing view: technical
+evidence should be invisible by default but not deleted — the full
+tagged/cited text stays available
 (api/main.py returns it as `answer_technical`) for an optional
 "why this answer?" view, and SourcesPanel.jsx already renders the actual
 citations separately.

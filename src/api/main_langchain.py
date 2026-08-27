@@ -2,13 +2,12 @@
 api/main_langchain.py — HTTP layer for ask_langchain_hybrid.py, mirroring
 api/main.py's pattern (models/BM25 index/cross-encoder preloaded once at
 startup instead of per-request) but as its own small app rather than a
-change to api/main.py — that file fronts ask_hybrid.py specifically and
-serves the built frontend-react/ bundle; this one exists to make the
-LangChain pipeline runnable as a real service instead of only a CLI
-one-shot, which was the single biggest latency problem with it (every CLI
-invocation reloaded the embedding model, cross-encoder, and BM25 index
-from scratch — several real seconds of pure model-loading before a query
-even started).
+change to api/main.py — that file also serves the built frontend-react/
+bundle, and this one exists to expose extra observability endpoints
+without touching that file's response shape. Preloading matters because a
+cold, per-invocation reload of the embedding model, cross-encoder, and
+BM25 index costs several real seconds of pure model-loading before a
+query even starts.
 
 Reuses api/resources.py::get_resources() directly rather than
 ask_langchain_hybrid.py's own build_resources() — they build the exact
@@ -28,10 +27,10 @@ them here would be pure risk for no benefit.
 
 Adds three fields api/main.py's ChatResponse doesn't have: `tool_trace`,
 `timing`, `usage` — real per-request observability ask_langchain_hybrid.py
-supports natively (see its own docstring) that ask_hybrid.py's API layer
-never surfaced to a caller. Left out of api/main.py's response deliberately
-(scope creep on an unrelated file); included here since this file's whole
-point is demonstrating what the LangChain port can do.
+supports natively (see its own docstring). Left out of api/main.py's
+response deliberately (scope creep on an unrelated file); included here
+since this file's whole point is exposing what the pipeline is doing under
+the hood.
 
 Run with:
     uvicorn api.main_langchain:app --reload --app-dir src --port 8001

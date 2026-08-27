@@ -1,34 +1,30 @@
 """
 conversation/resolve.py — expands a short follow-up question into a
-self-contained query before it ever reaches routing/retrieval, per
-problems.md Section 6: "Before searching the knowledge base, convert
-short follow-up questions into a fully understood internal query."
+self-contained query before it ever reaches routing/retrieval: "before
+searching the knowledge base, convert short follow-up questions into a
+fully understood internal query."
 
-Template-based, not an LLM call — this project's own naive-v1-first
-convention (classify_query/classify_doc_type are both keyword tables, not
-model calls) and, practically, this needs to keep working even when both
-configured LLM providers are exhausted (a real, current constraint this
-session hit repeatedly).
+Template-based, not an LLM call — this needs to keep working even when
+every configured LLM provider is exhausted (a real, current constraint
+this project hits regularly), and a fixed template is easy to reason
+about correctness for.
 
-**Phrasing DOES matter here, verified empirically 2026-08-19, contradicting
-this module's own first draft** (which assumed, per problems.md's "the
-exact wording is unimportant," that any phrasing containing the right
-product/attribute/value would do). Real test: resolving "is that too
-much?" to `"For Amul Dark Chocolate: is that too much (referring to:
-total_sugars_g = 43.0g...)"` — product name leading, fact trailing —
-retrieved PGPR/lecithin ingredient chunks at rerank score 0.62 while the
-one relevant nutrition-guidance chunk in the pool scored 0.0007, a ~900x
-gap retrieval/search_hybrid.py's intent-based doc_type boost (a modest RRF
-nudge) cannot bridge and should not be force-bridged (an artificially huge
-boost would just misfire on unrelated queries, the exact mistake
-PHASE3_TESTING_LOG.md Finding 7 already warns against). Root cause: the
-product-name-heavy phrasing shares vocabulary with product/ingredient
-chunks specifically, dragging the cross-encoder toward them regardless of
-which doc_types even reach the pool. Fixed by leading with the concrete
-fact/value instead (matching problems.md Section 6's own worked example,
-which does exactly this — "Is 43 g of total sugar per 100 g ... a high
-amount?", value first) — re-verified this retrieves the actual relevant
-nutrition-guidance content instead.
+**Phrasing DOES matter here, verified empirically 2026-08-19** — an
+earlier assumption that any phrasing containing the right
+product/attribute/value would do turned out to be wrong. Real test:
+resolving "is that too much?" to `"For Amul Dark Chocolate: is that too
+much (referring to: total_sugars_g = 43.0g...)"` — product name leading,
+fact trailing — retrieved PGPR/lecithin ingredient chunks at rerank score
+0.62 while the one relevant nutrition-guidance chunk in the pool scored
+0.0007, a ~900x gap retrieval/search_hybrid.py's intent-based doc_type
+boost (a modest RRF nudge) cannot bridge and should not be force-bridged
+(an artificially huge boost would just misfire on unrelated queries).
+Root cause: the product-name-heavy phrasing shares vocabulary with
+product/ingredient chunks specifically, dragging the cross-encoder toward
+them regardless of which doc_types even reach the pool. Fixed by leading
+with the concrete fact/value instead ("Is 43 g of total sugar per 100 g
+... a high amount?", value first) — re-verified this retrieves the actual
+relevant nutrition-guidance content instead.
 """
 import re
 import sys
@@ -175,11 +171,10 @@ def resolve_followup(query: str, state: dict) -> str:
         # the cross-encoder toward product/ingredient-specific chunks
         # over generic guidance chunks (same root cause as the module
         # docstring's finding, one layer further). Product continuity
-        # across turns is handled structurally instead (ask_hybrid.py
+        # across turns is handled structurally instead — the pipeline
         # falls back to conversation_state's remembered product_id when
-        # this text-only routing can't resolve one — problems.md Section
-        # 5's own "preserve Product as state" design, not re-mentioning
-        # the name in every follow-up's text).
+        # this text-only routing can't resolve one, rather than
+        # re-mentioning the name in every follow-up's text.
         label = _attribute_label(active_attr)
         return f"Is {fact['value']}{fact['unit']} of {label} a lot? {query}"
 

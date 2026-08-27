@@ -65,7 +65,7 @@ RERANK_POOL_SIZE = 15   # top-N fused candidates handed to the cross-encoder
 # those same canonical section names; deliberately a short, closed list
 # (functional-additive classes are a small, stable vocabulary, not an
 # open-ended judgment-word set — same reasoning as _REGULATORY_LIMIT_RE/
-# _CLAIM_ELIGIBILITY_RE in ask_hybrid.py).
+# _CLAIM_ELIGIBILITY_RE in hybrid_core.py).
 _QUERY_CLASS_TERMS: dict[str, str] = {
     "flavour enhancer": "Flavour Enhancers",
     "flavor enhancer": "Flavour Enhancers",
@@ -186,16 +186,16 @@ def _fuse(dense_results: list[dict], bm25_results: list[tuple[Chunk, float]]) ->
     Reciprocal Rank Fusion by chunk_id. Returns {chunk_id: chunk_dict}
     with an "rrf_score" key added to each dict.
 
-    Also carries a "bm25_score" key (added 2026-08-25 for the q27
-    corrective-retry fix, PHASE3_TESTING_LOG.md Finding 31/33) — the raw,
-    un-fused BM25 score from `bm25_search`, not the rank-based RRF
-    contribution. `ask_hybrid.py::retrieve_hybrid_with_retry()` uses this
-    as an independent corroborating signal: the cross-encoder's own
-    absolute rerank score is a known-uncalibrated confidence gate (Finding
-    31), but a landslide raw BM25 margin between the top pick and #2 is a
-    real, separately-sourced signal the retry logic can trust even when
-    the cross-encoder score alone can't be. Defaults to 0.0 for a chunk
-    that only ever came from dense search (never matched in BM25 at all).
+    Also carries a "bm25_score" key (added 2026-08-25 for a q27
+    corrective-retry fix) — the raw, un-fused BM25 score from
+    `bm25_search`, not the rank-based RRF contribution.
+    `retrieve_hybrid_with_retry()` (hybrid_core.py) uses this as an
+    independent corroborating signal: the cross-encoder's own absolute
+    rerank score is a known-uncalibrated confidence gate, but a landslide
+    raw BM25 margin between the top pick and #2 is a real,
+    separately-sourced signal the retry logic can trust even when the
+    cross-encoder score alone can't be. Defaults to 0.0 for a chunk that
+    only ever came from dense search (never matched in BM25 at all).
     """
     fused: dict[str, dict] = {}
 
@@ -218,8 +218,8 @@ def _fuse(dense_results: list[dict], bm25_results: list[tuple[Chunk, float]]) ->
 
 def find_comparison_group_match(candidates: list[dict], top_k: int = 5) -> list[dict] | None:
     """
-    Narrow, evidence-based override for ask_hybrid.py's corrective-retry
-    confidence gate (see that module's retrieve_hybrid_with_retry): looks
+    Narrow, evidence-based override for the corrective-retry confidence
+    gate (see hybrid_core.py's retrieve_hybrid_with_retry): looks
     for 2+ candidates in the fused pool sharing the same non-empty
     comparison_group tag — a curated, deliberately-authored pairing
     written directly into the KB (e.g. "sugar_vs_sweetener" links
@@ -279,27 +279,25 @@ def search_hybrid(
     """
     If return_full_pool is True, returns (reranked_top_k, full_candidate_pool)
     instead of just reranked_top_k — the full pre-rerank-cutoff candidate
-    pool is what ask_hybrid.py's comparison_group override needs to see,
-    since chunks relevant to one side of a tagged comparison may not
-    individually clear the rerank score threshold but still be present in
-    the wider pool before it's cut down to RERANK_POOL_SIZE and reranked.
+    pool is what the comparison_group override needs to see, since chunks
+    relevant to one side of a tagged comparison may not individually clear
+    the rerank score threshold but still be present in the wider pool
+    before it's cut down to RERANK_POOL_SIZE and reranked.
 
     `timing`, if given, gets `dense_search`/`bm25_search`/`rerank` durations
     ADDED to (via `_accumulate`, not overwritten) — a corrective retry calls
-    this function twice (see ask_hybrid.py), so the two calls' durations per
-    stage are summed into one real end-to-end figure, not one overwriting
-    the other. Optional, default None, no behavior change for any existing
-    caller.
+    this function twice, so the two calls' durations per stage are summed
+    into one real end-to-end figure, not one overwriting the other.
+    Optional, default None, no behavior change for any existing caller.
 
-    `intent`, if given (one of routing/query_router.py::classify_intent()'s
-    categories), applies INTENT_DOC_TYPE_POLICY's boost/penalize doc_type
-    lists — a stronger, multi-doc_type version of the existing single-hint
-    classify_doc_type() boost below (problems.md Problem 2/3: regulatory
-    chunks overpowering nutrition questions). Still a soft RRF adjustment,
-    never a hard filter — see the module docstring on why. Falls back to
-    the existing classify_doc_type() single-hint boost when `intent` isn't
-    passed or isn't in the policy table — zero behavior change for any
-    caller that doesn't opt in (ask.py's baseline never will).
+    `intent`, if given, applies INTENT_DOC_TYPE_POLICY's boost/penalize
+    doc_type lists — a stronger, multi-doc_type version of the existing
+    single-hint classify_doc_type() boost below (regulatory chunks
+    overpowering nutrition questions was a real observed failure mode).
+    Still a soft RRF adjustment, never a hard filter — see the module
+    docstring on why. Falls back to the existing classify_doc_type()
+    single-hint boost when `intent` isn't passed or isn't in the policy
+    table — zero behavior change for any caller that doesn't opt in.
     """
     start = time.perf_counter()
     dense_results = _dense_search(query, qdrant_client, dense_model, FUSION_POOL_SIZE)

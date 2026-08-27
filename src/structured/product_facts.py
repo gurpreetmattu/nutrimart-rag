@@ -2,9 +2,9 @@
 product_facts.py — direct SQL lookup + deterministic formatting for
 product-fact queries, routed here by routing/query_router.py.
 
-Per project_state_summary.md's pipeline design: "Product-fact queries ->
-direct SQL lookup + code-computed derivations. Bypasses RAG entirely."
-No LLM call in this path — the answer is built straight from the
+Product-fact queries go straight to SQL lookup + code-computed
+derivations, bypassing RAG entirely. No LLM call in this path — the
+answer is built straight from the
 database row, since the value is already a known fact, not something
 that needs retrieval or synthesis. It's still typed [FACT] and cited to
 the DB, matching the claim-typing contract the LLM path uses in

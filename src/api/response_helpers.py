@@ -1,7 +1,6 @@
 """
 api/response_helpers.py — pure, pipeline-agnostic response-shaping logic
-shared between api/main.py (ask_hybrid.py) and api/main_langchain.py
-(ask_langchain_hybrid.py).
+shared between api/main.py and api/main_langchain.py.
 
 Split out 2026-08-24 after an audit found `_confidence()`/`_build_sources()`
 had been hand-copied into api/main_langchain.py instead of imported —

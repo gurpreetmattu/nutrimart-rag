@@ -5,9 +5,9 @@ have this rather than call Groq's SDK directly, both things this project
 actually hit, not hypothetical:
 
 1. **Automatic fallback on quota exhaustion.** Groq's 200,000 TPD limit was
-   hit for real, multiple times, in one session (PHASE3_TESTING_LOG.md
-   Findings 10 and 19) — every one of those runs just failed outright with
-   no fallback. `complete()` catches Groq's RateLimitError specifically and
+   hit for real, multiple times, in one session — every one of those runs
+   just failed outright with no fallback. `complete()` catches Groq's
+   RateLimitError specifically and
    retries once against a Hugging Face Inference API model
    (Qwen/Qwen2.5-7B-Instruct — ungated, ordinary instruct model) instead of
    giving up. This is genuinely tested against a real exhausted-quota
@@ -38,7 +38,7 @@ from generation.token_budget import (
 GROQ_MODEL = "openai/gpt-oss-120b"
 # Ungated, ordinary (non-reasoning) instruct model — chosen specifically so
 # the fallback path has NO hidden reasoning-token overhead at all (unlike
-# GROQ_MODEL, see PHASE3_TESTING_LOG.md Finding 19), and so a fallback call
+# GROQ_MODEL, a real observed difference), and so a fallback call
 # has predictable, bounded completion-token behavior even under the same
 # max_tokens budget tuned for the reasoning model.
 #
@@ -63,13 +63,12 @@ _hf_client: InferenceClient | None = None
 
 def _load_groq_api_keys() -> list[str]:
     """
-    GROQ_API_KEY, then GROQ_API_KEY_2, GROQ_API_KEY_3, ... (added 2026-08-21
-    once a second/third free-tier key became available — each free key has
-    its own independent 200k TPD limit, which was the single biggest
-    constraint on iterating this session, e.g. PHASE3_TESTING_LOG.md
-    Findings 10/19 and the repeated mid-eval quota exhaustion earlier
-    today). Stops at the first missing numbered suffix, so GROQ_API_KEY_4
-    etc. just needs adding to .env with no code change.
+    GROQ_API_KEY, then GROQ_API_KEY_2, GROQ_API_KEY_3, ... (added once a
+    second/third free-tier key became available — each free key has its
+    own independent 200k TPD limit, which was a real, repeated constraint
+    on eval runs before multi-key rotation existed). Stops at the first
+    missing numbered suffix, so GROQ_API_KEY_4 etc. just needs adding to
+    .env with no code change.
     """
     keys = []
     base = os.environ.get("GROQ_API_KEY")

@@ -1,32 +1,18 @@
 """
-query_router.py — Phase 5 v1: routes a query to either the SQLite
-product-fact path or the existing (still Phase-3-naive) retrieval path.
+query_router.py — routes a query to either the SQLite product-fact path
+or the retrieval path.
 
-This is the fix for PHASE3_TESTING_LOG.md Finding 6 ("no query routing —
-product-fact questions like calorie counts and license numbers went
-through vector retrieval and correctly came back [UNCERTAIN] instead of
-being answered directly").
+Deliberately naive by design: substring and whole-word keyword matching,
+no ML classifier, no LLM call — a genuine cost optimization for the
+confident, unambiguous cases it handles, not a general-purpose intent
+classifier. A regulatory/interpretive/comparative query that happens to
+name a product (e.g. "is Diet Coke's sweetener within the legal limit")
+must still go to retrieval, so REGULATORY_OVERRIDE_TERMS always wins over
+a fact-field match.
 
-Deliberately naive, same spirit as the Phase 3 baseline files: substring
-and whole-word keyword matching, no ML classifier, no LLM call. Good
-enough to fix q12/q13 in src/eval/test_questions.py and similar direct
-lookups — not a general-purpose intent classifier. A regulatory/
-interpretive/comparative query that happens to name a product (e.g. "is
-Diet Coke's sweetener within the legal limit") must still go to
-retrieval, so REGULATORY_OVERRIDE_TERMS always wins over a fact-field
-match.
-
-This module's actual scope narrowed on 2026-08-21: an LLM tool-calling
-loop (ask_hybrid.py) now handles everything that isn't a confident,
-unambiguous product-fact lookup — see that file's own migration note.
-classify_query() below (the product_fact/retrieval split) is the one
-piece that survived unchanged, kept as a pure cost optimization for the
-cases it's genuinely confident about; classify_intent() and its
-supporting phrase tables/data-driven matchers, which used to run a
-second, finer-grained classification within the retrieval route, were
-confirmed fully unreferenced and deleted outright 2026-08-22 (not just
-retired-in-place) — the tool-calling loop's real language understanding
-replaced what they did, only better.
+classify_query() below (the product_fact/retrieval split) is the whole of
+this module's scope — an LLM tool-calling loop (hybrid_core.py) handles
+everything that isn't a confident, unambiguous product-fact lookup.
 """
 import difflib
 import re
@@ -95,9 +81,9 @@ REGULATORY_OVERRIDE_TERMS = [
     # just phrased without the literal word "claim". Confirmed real: this
     # fast path resolved via `route="product_fact"` before the tool-calling
     # loop (and its own, separately-broadened _CLAIM_ELIGIBILITY_RE in
-    # ask_hybrid.py) ever got a chance to see the query at all — the
-    # ask_hybrid.py-level fix alone was insufficient, same two-layer shape
-    # as q27's original router+tool-loop bug pair.
+    # hybrid_core.py) ever got a chance to see the query at all — the
+    # tool-loop-level fix alone was insufficient, same two-layer shape as
+    # q27's original router+tool-loop bug pair.
     "good source of", "rich in", "high in", "low in", "excellent source",
 ]
 
@@ -301,25 +287,21 @@ def classify_doc_type(query: str) -> str | None:
 # this KB, those concepts are handled by the SQL-side product_fact route
 # and structured/product_comparison.py instead) should be boosted or
 # penalized in retrieval/search_hybrid.py. Still soft (a boost/penalty on
-# the RRF score), never a hard filter — PHASE3_TESTING_LOG.md Finding 7
-# documents a real regression from hard-filtering on this KB's thin/uneven
-# doc_type coverage; this strengthens the existing soft mechanism instead
-# of repeating that mistake.
+# the RRF score), never a hard filter — hard-filtering on this KB's
+# thin/uneven doc_type coverage was confirmed to regress real queries;
+# this strengthens the existing soft mechanism instead of repeating that
+# mistake.
 #
-# STATUS (2026-08-22): kept, but currently unexercised — the keyword-based
-# classify_intent() that used to populate the `intent` argument
-# (retrieval/search_hybrid.py::search_hybrid()) was retired along with the
-# rest of the pre-tool-calling routing layer (see ask_hybrid.py's 2026-08-21
-# migration note), and nothing has replaced it as an `intent` source since.
+# STATUS: kept, but currently unexercised — nothing currently populates
+# the `intent` argument (retrieval/search_hybrid.py::search_hybrid()).
 # Every real caller today passes intent=None, so search_hybrid() silently
 # falls back to its single-hint classify_doc_type() boost instead — not a
 # bug, an explicitly designed fallback (see that function's own docstring).
 # This table and the doc_type boost/penalize mechanism it drives are still
-# real, working code (not dead in the classify_intent()/_match_*_mention()
-# sense — those were deleted outright), just without a current populator;
-# left in place as an intentional hook for future work rather than removed,
-# since agent/tools.py's fired tool name is a plausible signal to
-# reconnect it to.
+# real, working code, just without a current populator; left in place as
+# an intentional hook for future work rather than removed, since
+# agent/tools.py's fired tool name is a plausible signal to reconnect it
+# to.
 INTENT_DOC_TYPE_POLICY: dict[str, dict[str, list[str]]] = {
     "nutrition_fact": {"boost": ["nutrition_general"], "penalize": ["regulatory", "claims_advertising"]},
     "nutrition_assessment": {"boost": ["nutrition_general"], "penalize": ["regulatory", "claims_advertising"]},

@@ -9,9 +9,8 @@ needs, not a general security framework:
 
 - Rate limiting on /api/chat specifically, not the whole API — that's the
   one endpoint that spends real LLM-provider quota per call, and this
-  project has hit real quota exhaustion multiple times in one day this
-  session (PHASE3_TESTING_LOG.md Findings 10, 19, 22) purely from this
-  session's own testing traffic. An unauthenticated public demo with no
+  project has hit real quota exhaustion multiple times in one day purely
+  from its own testing traffic. An unauthenticated public demo with no
   rate limit at all could exhaust both configured providers' free tiers
   from a handful of browser refreshes.
 - Query length bounds (Pydantic Field, in main.py) — an unbounded query

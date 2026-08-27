@@ -1,30 +1,21 @@
 """
-hybrid_core.py — the hybrid-retrieval business logic shared by BOTH
-ask_hybrid.py (the hand-rolled Phase 5 pipeline) and ask_langchain_hybrid.py
-(its LangChain-native port). Extracted 2026-08-26 from ask_hybrid.py, where
-all of this used to live directly.
+hybrid_core.py — the hybrid-retrieval decision logic used by
+ask_langchain_hybrid.py: corrective retry, the BM25-consensus check, the
+comparison_group override, and the regex safety-nets (_HEALTH_JUDGMENT_RE
+etc.) that force a knowledge-base search for evaluative/regulatory
+questions.
 
-Why this file exists: ask_langchain_hybrid.py was importing these ~14
-symbols straight from ask_hybrid.py's module namespace (`from ask_hybrid
-import retrieve_hybrid_with_retry, _HEALTH_JUDGMENT_RE, ...`) rather than
-duplicating them — deliberate, see that file's own docstring on why
-duplicating hard-won bug fixes (Finding 16's comparison_group fix, Finding
-34's BM25-consensus fix, etc.) would be a real risk. That was fine as an
-internal detail, but it meant the LangChain pipeline could never be
-separated from ask_hybrid.py without either breaking that import or
-duplicating the logic. Pulling the shared pieces into their own module
-removes that coupling cleanly: ask_hybrid.py now imports FROM here too
-(nothing duplicated, nothing behaviorally changed), and
-ask_langchain_hybrid.py depends on this file instead of on ask_hybrid.py
-directly.
+Kept in its own module, separate from the LangChain entrypoint itself, so
+this retrieval-decision logic exists in exactly one place rather than
+being duplicated inline inside a LangChain-specific file — it's plain
+Python either way, not something a LangChain abstraction models naturally
+(see ARCHITECTURE.md §7).
 
-What stays OUT of this file (still ask_hybrid.py-only): the `ask_hybrid()`
-entrypoint function itself and its own `__main__` block — those call
-`generation/gateway.py::complete_raw()` directly, which is the hand-rolled
-call layer this project's two original pipelines exist to demonstrate as a
-plain-Python control condition. ask_langchain_hybrid.py's own
-`groq_gateway_invoke()` is its own separate LangChain-native reimplementation
-of that same layered behavior, not something this file needs to provide.
+What stays OUT of this file: the actual LLM call layer. That lives in
+`ask_langchain_hybrid.py`'s own `groq_gateway_invoke()`, a LangChain-native
+multi-key-rotation + proactive-budget + HF-fallback implementation
+(`ChatGroq`/`ChatHuggingFace`) — this module only decides *what* to
+retrieve, never how a model gets called.
 """
 import difflib
 import json
@@ -42,18 +33,17 @@ from generation.llm import rewrite_query
 from conversation.state import set_product
 from timing import timed
 
-# --- Tool-routing topic map (see ask_hybrid.py's original 2026-08-21 comment
-# on why classify_intent()'s dispatch was replaced by single-round LLM
-# tool-calling) ---
+# --- Tool-routing topic map: a single-round LLM tool-calling decision
+# dispatches between structured lookups and knowledge-base retrieval ---
 _TOOL_TOPIC = {
     "lookup_product_fact": "product_fact", "check_ingredient_or_allergen": "ingredient",
     "compare_products": "comparison", "search_knowledge_base": "regulatory",
 }
 
 # Safety net for evaluative/health-judgment questions ("is this healthy?",
-# "is this good for kids?", "should I buy this?") — see PHASE3_TESTING_LOG.md
-# Findings 21/26/40/42 for the full history of why this pattern keeps
-# widening (a closed, stable vocabulary problem, not a whack-a-mole one).
+# "is this good for kids?", "should I buy this?") — widened repeatedly
+# against real query phrasings (a closed, stable vocabulary problem, not a
+# whack-a-mole one).
 _HEALTH_JUDGMENT_RE = re.compile(
     r"\bhealth(?:y|ier|iest)?\b|\bgood for\b|\bbad for\b|\bsafe for\b|\bsuitable for\b"
     r"|\bshould i (?:buy|eat|choose|pick|get)\b|\brecommend\b"
@@ -65,8 +55,7 @@ _HEALTH_JUDGMENT_RE = re.compile(
 )
 
 # Composition-verdict questions ("is this PURELY wheat?", "is it MOSTLY
-# sugar?", "is this JUST X?") — see PHASE3_TESTING_LOG.md Finding 29's
-# 2026-08-22 writeup for the full reasoning/test cases.
+# sugar?", "is this JUST X?") — verified against real test cases.
 _COMPOSITION_VERDICT_RE = re.compile(
     r"\bpurely\b|\bentirely\b|\bexclusively\b|\bsolely\b|\bnothing but\b"
     r"|\bonly\b.{0,20}\b(?:made|wheat|sugar|milk|oil|flour|rice|corn|ingredient)\b"
@@ -209,8 +198,8 @@ def _build_agent_context_block(effective_product_id: str | None, sqlite_conn, co
 
 
 # Sigmoid-space cross-encoder score threshold below which the corrective
-# retry kicks in — see PHASE3_TESTING_LOG.md Finding 7 for the real score
-# distributions this was validated against.
+# retry kicks in — validated against real observed score distributions,
+# not guessed.
 RERANK_SCORE_THRESHOLD = 0.3
 
 INSUFFICIENT_EVIDENCE_MESSAGE = (

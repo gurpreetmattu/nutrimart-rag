@@ -1,4 +1,4 @@
-# quick-commerce-rag (LangChain pipeline)
+# NutriMart RAG
 
 A LangChain-native RAG chatbot that answers questions about packaged food
 products (ingredients, nutrition, allergens, FSSAI regulatory compliance)
@@ -10,10 +10,6 @@ memory, and a numeric groundedness check.
 **Live demo:** https://nutrimart-rag-33924421255.asia-south1.run.app/
 (Cloud Run, scales to zero — the first request after idle may take a few
 seconds to cold-start.)
-
-This is the LangChain half of a larger portfolio project that also
-includes hand-rolled (no-framework) pipelines as a comparison baseline —
-this repo contains only the LangChain-native side.
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for a full deep dive: the data,
 the request flow, hybrid retrieval, groundedness/consistency checking,
@@ -29,7 +25,7 @@ design decisions behind each piece (including what was tried and reverted).
   tool-calling router (`agent/tools.py`) that dispatches between SQL
   lookups and knowledge-base retrieval, conversation state/follow-up
   resolution, and a post-generation groundedness check. Its own
-  `groq_gateway_invoke()` reimplements multi-key rotation + a proactive
+  `groq_gateway_invoke()` implements multi-key rotation + a proactive
   per-key daily token-budget ledger + a Hugging Face fallback, all
   LangChain-native (`ChatGroq`/`ChatHuggingFace`).
 - **`hybrid_core.py`** — the retrieval-decision logic shared by the hybrid
@@ -156,18 +152,18 @@ content needs the manual one-time (or KB-edit-triggered) sync above.
 
 ## Eval
 
-A hand-rolled RAGAS-equivalent harness (faithfulness, answer relevancy,
-context precision/recall) against `ask_langchain_hybrid.py`:
+A lightweight, dependency-free evaluation harness (faithfulness, answer
+relevancy, context precision/recall) against `ask_langchain_hybrid.py`:
 
 ```bash
 python src/eval/run_ragas_eval.py --out ragas_report.md
 python src/eval/run_ragas_eval.py --n 3   # cheap pilot
 ```
 
-The same four metrics via the **real** `ragas` PyPI package (rotates across
-every configured `GROQ_API_KEY*` — a real daily-quota exhaustion on a
-single key is what a full 20-question run actually costs; see the script's
-own docstring for the ragas/instructor version-compat bugs it works around):
+The same four metrics via the `ragas` PyPI package (rotates across every
+configured `GROQ_API_KEY*` — a real daily-quota exhaustion on a single key
+is what a full 20-question run actually costs; see the script's own
+docstring for the ragas/instructor version-compat bugs it works around):
 
 ```bash
 python src/eval/run_real_ragas.py --out ragas_real_report.md

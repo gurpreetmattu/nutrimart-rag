@@ -1,18 +1,16 @@
 """
 test_questions.py — the eval question set both eval/run_ragas_eval.py
-(hand-rolled harness) and eval/run_real_ragas.py (the real ragas package)
-run against ask_langchain_hybrid.py.
+and eval/run_real_ragas.py (the `ragas` package) run against
+ask_langchain_hybrid.py.
 
 Structure: each question has an `expects` field describing what a correct
 retrieval should surface (prose, for manual reading — kept as-is, this
 predates automated scoring). `difficulty_for_baseline` and `expected_route`/
-`relevant_chunks` were originally scored by an automated naive-vs-hybrid
-comparison harness this repo doesn't include (see ARCHITECTURE.md for why
-this repo is LangChain-only) — the fields survive here as still-useful,
-KB-verified ground truth, but nothing in this repo currently scores against
-them automatically. `reference_answer` is the field both eval scripts
-above actually use today (needed to decompose into claims for a
-faithfulness/context-recall pass, not just a prose `expects` description
+`relevant_chunks` are KB-verified ground truth kept for reference — nothing
+in this repo currently scores against them automatically.
+`reference_answer` is the field both eval scripts above actually use today
+(needed to decompose into claims for a faithfulness/context-recall pass,
+not just a prose `expects` description
 meant for manual reading), only present where a question actually
 supports that kind of check:
 - `relevant_chunks` (q01–q09 only): list of (source_file, heading_prefix)
@@ -134,8 +132,8 @@ QUESTIONS = [
     {
         "id": "q07",
         "query": "should I pick the diet version instead of regular",
-        "expects": "RESOLVED 2026-08-18 (was a hybrid-only unrescuable multi-hop case until then — see PHASE3_TESTING_LOG.md Finding 16): needs BOTH nutrition_knowledge_base.md Chunk 8c (WHO NSS practical-implications guidance) AND fssai_knowledge_base.md Chunk 5 (general sweetener-limits table) — a comparative query with no single chunk containing the full answer. Ground truth corrected 2026-08-18: originally listed Chunk 8a/Chunk 50, but live retrieval verification showed neither ever reaches the fused candidate pool for this exact query — Chunk 8c and Chunk 5 are the chunks that actually retrieve, and are now the ones tagged with the real, wired-up `comparison_group: \"sugar_vs_sweetener\"` metadata (previously inert — parsed and used for the first time in Finding 16). Baseline (naive) still cannot answer this — the comparison_group mechanism is hybrid-only, same precedent as the corrective retry and groundedness check.",
-        "difficulty_for_baseline": "hard — the textbook case for why flat top-k retrieval alone isn't enough; hybrid resolves it via a narrow, tag-based override (Finding 16), baseline still can't",
+        "expects": "RESOLVED 2026-08-18 (was an unrescuable multi-hop case until then): needs BOTH nutrition_knowledge_base.md Chunk 8c (WHO NSS practical-implications guidance) AND fssai_knowledge_base.md Chunk 5 (general sweetener-limits table) — a comparative query with no single chunk containing the full answer. Ground truth corrected 2026-08-18: originally listed Chunk 8a/Chunk 50, but live retrieval verification showed neither ever reaches the fused candidate pool for this exact query — Chunk 8c and Chunk 5 are the chunks that actually retrieve, and are now the ones tagged with the real, wired-up `comparison_group: \"sugar_vs_sweetener\"` metadata (previously inert — parsed and used for the first time here).",
+        "difficulty_for_baseline": "hard — the textbook case for why flat top-k retrieval alone isn't enough; the hybrid pipeline resolves it via a narrow, tag-based override, a naive dense-only retriever still can't",
         "relevant_chunks": [
             ("nutrition_knowledge_base.md", "Chunk 8c"),
             ("fssai_knowledge_base.md", "Chunk 5"),
@@ -166,7 +164,7 @@ QUESTIONS = [
     {
         "id": "q10",
         "query": "what is the exact FSSAI permitted level of DATEM in bread",
-        "expects": "RESOLVED 2026-08-18 (was an open-gap trap question until then — see PHASE3_TESTING_LOG.md Finding 13): ingredient_knowledge_base.md's 472e entry now states the real FSSAI answer, directly confirmed against Appendix A: GMP (Good Manufacturing Practice — no fixed numeric ceiling) for bread specifically, 10,000 ppm max for biscuits. Correct behavior is now to state this real answer with a [FACT]/[REGULATORY] citation to the 472e entry, NOT to hedge or return insufficient-evidence — that would now be under-confident given a real primary-source confirmation exists. No longer a hallucination-risk trap question; retest as a normal retrieval-accuracy case.",
+        "expects": "RESOLVED 2026-08-18 (was an open-gap trap question until then): ingredient_knowledge_base.md's 472e entry now states the real FSSAI answer, directly confirmed against Appendix A: GMP (Good Manufacturing Practice — no fixed numeric ceiling) for bread specifically, 10,000 ppm max for biscuits. Correct behavior is now to state this real answer with a [FACT]/[REGULATORY] citation to the 472e entry, NOT to hedge or return insufficient-evidence — that would now be under-confident given a real primary-source confirmation exists. No longer a hallucination-risk trap question; retest as a normal retrieval-accuracy case.",
         "difficulty_for_baseline": "medium — was a trap question until the KB gap was resolved 2026-08-18; now tests whether GMP (not a numeric ppm figure) gets stated correctly rather than the model inventing a number to match the question's phrasing (\"exact...level\" implies a number, but the real answer is a qualitative status)",
         "relevant_chunks": [("ingredient_knowledge_base.md", "INS 472e")],
         "reference_answer": "The FSSAI-permitted level of DATEM (INS 472e) is expressed as Good Manufacturing Practice (GMP) for bread specifically — no fixed numeric ppm ceiling — while biscuits carry a 10,000 ppm maximum. There is no single 'exact' numeric figure for bread because GMP is a qualitative permission, not a quantitative one.",
@@ -198,12 +196,11 @@ QUESTIONS = [
         "expected_fact_field": "fssai_license",
     },
 
-    # --- Routing regression tests (routing/query_router.py), added after
-    # PHASE3_TESTING_LOG.md Finding 6 was fixed. q12/q13 above cover the
-    # original failure; these extend coverage to other fact fields and to
-    # the router's two safety mechanisms: the regulatory-override terms
-    # and ambiguous-product tie detection. Predictions verified directly
-    # against classify_query() — see Finding 6's fix note. ---
+    # --- Routing regression tests (routing/query_router.py). q12/q13 above
+    # cover the original failure this router fixes; these extend coverage
+    # to other fact fields and to the router's two safety mechanisms: the
+    # regulatory-override terms and ambiguous-product tie detection.
+    # Predictions verified directly against classify_query(). ---
     {
         "id": "q14",
         "query": "how much protein does Yogabar's protein bar have",

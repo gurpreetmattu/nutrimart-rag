@@ -1,19 +1,18 @@
 """
-eval/run_real_ragas.py — runs the ACTUAL `ragas` PyPI package (not the
-hand-rolled equivalent in eval/ragas_metrics.py/run_ragas_eval.py) against
+eval/run_real_ragas.py — runs the `ragas` PyPI package itself (not the
+lightweight equivalent in eval/ragas_metrics.py/run_ragas_eval.py) against
 ask_langchain_hybrid.py, computing the same four metrics via ragas's own
 implementation: faithfulness, answer relevancy, context precision, context
 recall.
 
-Why this exists alongside the hand-rolled harness, not instead of it: see
-ARCHITECTURE.md §8 for the original reasoning (a dependency conflict with
-this project's now-retired non-LangChain comparison pipelines, and a
-concern about eval calls bypassing generation/gateway.py's quota
-management). Neither reason blocks a one-off, deliberately-costed run of
-the real library against this LangChain-only repo — this script is exactly
-that: a real second opinion from the actual, community-maintained metric
-implementations, not a replacement for the hand-rolled harness (which stays
-the one wired into the gateway's budget ledger for routine runs).
+Why this exists alongside the other harness, not instead of it: see
+ARCHITECTURE.md §8 — `ragas` calls its judge LLM through its own wrapper
+abstractions, which would mean routine eval runs bypass
+generation/gateway.py's quota management. That doesn't block a one-off,
+deliberately-costed run of the real library, which is exactly what this
+script is: a second opinion from the actual, community-maintained metric
+implementations, not a replacement for the other harness (which stays the
+one wired into the gateway's budget ledger for routine runs).
 
 Real, load-bearing bugs found getting the installed ragas==0.4.3 to run at
 all, worth recording since they'll bite the next person too:
@@ -203,9 +202,9 @@ async def _score_question(q: dict, resources: dict, llms: list, embeddings) -> d
     # `chunks` at all — faithfulness only had the KB context to check
     # against, so it correctly (and unhelpfully) flagged those as
     # unsupported. This is the EXACT gap eval/ragas_metrics.py's own
-    # faithfulness() already fixed for the hand-rolled harness (see its
-    # `known_facts_block` param, added specifically for q05/q07) — this
-    # script just wasn't using the same `return_structured_answers`/
+    # faithfulness() already fixed (see its `known_facts_block` param,
+    # added specifically for q05/q07) — this script just wasn't using
+    # the same `return_structured_answers`/
     # `return_known_facts` flags ask() already exposes for exactly this.
     contexts = [f"{c['heading']}: {c['text']}" for c in chunks]
     if structured_answers:
@@ -301,7 +300,7 @@ def _write_report(results: list[dict], out_path: str) -> None:
     lines = [
         "# Real RAGAS evaluation report",
         "",
-        f"Real `ragas` PyPI package (not the hand-rolled equivalent) against `ask_langchain_hybrid.py`. "
+        f"The `ragas` PyPI package against `ask_langchain_hybrid.py`. "
         f"{len(scored)} question(s) scored, {len(skipped)} skipped.",
         "",
         "## Summary",

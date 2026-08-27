@@ -9,9 +9,8 @@ plain suffix in the ingredient's free-text name (e.g. "colour 160c",
 there's no separate structured INS-code field to read directly. The
 regex below pulls the code back out. Verified directly against real data:
 Kurkure's parsed ingredients include "colour 160c" and "acidity regulator
-334" but nothing resembling INS 476 (PGPR) — matches
-PHASE3_TESTING_LOG.md Finding 2, which caught PGPR surfacing as
-irrelevant noise for a Kurkure query.
+334" but nothing resembling INS 476 (PGPR) — confirming a real bug where
+PGPR had been surfacing as irrelevant noise for a Kurkure query.
 """
 import json
 import re

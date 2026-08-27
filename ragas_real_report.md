@@ -1,6 +1,6 @@
 # Real RAGAS evaluation report
 
-Real `ragas` PyPI package (not the hand-rolled equivalent) against `ask_langchain_hybrid.py`. 18 question(s) scored, 2 skipped.
+The `ragas` PyPI package against `ask_langchain_hybrid.py`. 18 question(s) scored, 2 skipped.
 
 ## Summary
 

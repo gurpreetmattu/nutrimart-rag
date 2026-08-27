@@ -1,40 +1,31 @@
 """
-ask_langchain.py — a third, standalone pipeline built with LangChain,
-sitting alongside (not replacing) ask.py (Phase 3 naive baseline) and
-ask_hybrid.py (Phase 5 hybrid pipeline). Neither of those is touched by
-this file.
+ask_langchain.py — a minimal, naive-retrieval pipeline (dense top-k ->
+generation, no BM25/reranking/corrective retry) sitting alongside the full
+hybrid pipeline (ask_langchain_hybrid.py). Neither file touches the other.
 
-Scope, deliberately narrow: this mirrors ask.py's naive-retrieval shape
-(dense top-k -> generation, no BM25/reranking/corrective retry) but wires
-it with LangChain's own abstractions instead of the hand-rolled calls in
-retrieval/search_baseline.py and generation/llm.py:
+Built entirely on LangChain's own abstractions:
   - a custom langchain_core BaseRetriever (KBRetriever, below) over the
-    SAME "kb_baseline" collection the other two pipelines already query —
-    langchain_qdrant.QdrantVectorStore was tried first but assumes payload
-    shaped {"page_content": ..., "metadata": {...}}, while this project's
-    points store flat sibling fields; see KBRetriever's docstring
-  - a custom langchain_core Embeddings adapter wrapping the same
-    BAAI/bge-small-en-v1.5 model + BGE_QUERY_PREFIX (config.py) so results
-    are directly comparable to search_baseline.py's — same model, same
-    collection, same top_k
+    "kb_baseline" Qdrant collection — langchain_qdrant.QdrantVectorStore
+    was tried first but assumes payload shaped
+    {"page_content": ..., "metadata": {...}}, while this project's points
+    store flat sibling fields; see KBRetriever's docstring
+  - a custom langchain_core Embeddings adapter wrapping
+    BAAI/bge-small-en-v1.5 + BGE_QUERY_PREFIX (config.py)
   - langchain_groq.ChatGroq for generation, chained via LCEL
-    (retriever | prompt | llm | StrOutputParser), reusing this project's
-    existing GROQ_API_KEY/GROQ_MODEL from generation/gateway.py
+    (retriever | prompt | llm | StrOutputParser)
   - the same query_router.classify_query() + structured/product_facts.py
-    SQL short-circuit ask.py and ask_hybrid.py both use, so product-fact
-    questions still bypass retrieval/generation here too, kept for a fair
-    routing comparison rather than re-deriving that logic a third time
+    SQL short-circuit the hybrid pipeline uses, so product-fact questions
+    still bypass retrieval/generation here too
 
-Deliberately NOT ported: BM25 fusion, cross-encoder reranking, corrective
-retry, groundedness checking, tool-calling agent routing, comparison_group
-override — all of that is ask_hybrid.py-only by design (see
-ask_langchain_hybrid.py, this repo's own full-parity port of it, if you
-want that machinery in LangChain form). This file exists to demonstrate
-the standard LangChain RAG pattern, not to replicate the hybrid pipeline's
-engineering.
+Deliberately NOT included: BM25 fusion, cross-encoder reranking,
+corrective retry, groundedness checking, tool-calling agent routing,
+comparison_group override — that machinery lives in
+ask_langchain_hybrid.py. This file exists to demonstrate the standard
+LangChain RAG pattern at its simplest, not to replicate the hybrid
+pipeline's engineering.
 
-No fallback to Hugging Face on Groq quota exhaustion here (unlike
-generation/gateway.py) — ChatGroq is used directly, since building a
+No fallback to Hugging Face on Groq quota exhaustion here (unlike the
+hybrid pipeline's gateway) — ChatGroq is used directly, since building a
 LangChain-native fallback chain would be new scope beyond "build a
 LangChain RAG pipeline." If Groq's daily quota is exhausted, this
 pipeline will simply raise, same as calling Groq's SDK directly would.
@@ -62,10 +53,10 @@ from config import BGE_QUERY_PREFIX, COLLECTION_NAME, EMBEDDING_MODEL, get_qdran
 from routing.query_router import classify_query
 from structured.product_facts import answer_product_fact
 
-# Same system prompt content as generation/llm.py's SYSTEM_PROMPT, trimmed
+# Same system prompt content the hybrid pipeline's generator uses, trimmed
 # to what a plain LCEL chain needs (no known_facts/structured_context
-# sections — those are conversation-layer/tool-calling features that only
-# ask_hybrid.py has).
+# sections — those are conversation-layer/tool-calling features this
+# naive pipeline doesn't have).
 SYSTEM_PROMPT = """You are a product-information assistant for a quick-commerce grocery app. \
 You answer questions about packaged food products using ONLY the retrieved context provided \
 below — you do not use outside knowledge about these specific products, ingredients, or \
@@ -107,17 +98,16 @@ class BGEEmbeddings(Embeddings):
 class KBRetriever(BaseRetriever):
     """
     langchain_core.retrievers.BaseRetriever over the "kb_baseline" Qdrant
-    collection, querying it directly via qdrant_client (same as
-    retrieval/search_baseline.py) rather than through langchain_qdrant's
-    QdrantVectorStore wrapper. QdrantVectorStore's default document mapping
-    expects payload shaped {"page_content": ..., "metadata": {...}} — this
-    collection's points instead store flat sibling fields (source_file,
-    heading, text, doc_type, ...), the schema every other pipeline in this
-    project already reads. Rather than mutate the shared collection's
-    payload shape to fit the wrapper (embed_and_upsert.py owns that shape
-    and ask.py/ask_hybrid.py both depend on it), this retriever just maps
-    the existing flat payload into Document objects directly — still a
-    real LangChain BaseRetriever/Document, plugs into the LCEL chain the
+    collection, querying it directly via qdrant_client rather than through
+    langchain_qdrant's QdrantVectorStore wrapper. QdrantVectorStore's
+    default document mapping expects payload shaped
+    {"page_content": ..., "metadata": {...}} — this collection's points
+    instead store flat sibling fields (source_file, heading, text,
+    doc_type, ...), the schema embed_and_upsert.py builds and every
+    pipeline in this project reads. Rather than mutate the shared
+    collection's payload shape to fit the wrapper, this retriever just
+    maps the existing flat payload into Document objects directly — still
+    a real LangChain BaseRetriever/Document, plugs into the LCEL chain the
     same way QdrantVectorStore's retriever would.
     """
 

@@ -1,14 +1,13 @@
 """
 rerank.py — cross-encoder reranking of hybrid-fused candidates
-(retrieval/search_hybrid.py). Pipeline step 4 in project_state_summary.md:
-"Cross-encoder reranking of top-k."
+(retrieval/search_hybrid.py).
 
 Cross-encoders score a (query, passage) pair directly rather than
 comparing independently-embedded vectors, so they're the mechanism meant
-to fix PHASE3_TESTING_LOG.md Finding 2 ("topically-adjacent-but-not-
-responsive chunks crowd out the real answer") — a chunk can share a lot
-of embedding-space similarity with the query while a cross-encoder still
-correctly scores it as not actually answering the question.
+to fix "topically-adjacent-but-not-responsive chunks crowd out the real
+answer" — a chunk can share a lot of embedding-space similarity with the
+query while a cross-encoder still correctly scores it as not actually
+answering the question.
 """
 import sys
 from math import exp

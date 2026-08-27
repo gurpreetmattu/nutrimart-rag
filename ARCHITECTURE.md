@@ -318,12 +318,12 @@ generation — goes through LangChain-native call paths (`ChatGroq`,
 `ChatHuggingFace`, an LCEL prompt chain). Everything that *isn't* an LLM
 call — BM25 fusion, reciprocal rank fusion, cross-encoder reranking, the
 comparison-group tag match, structured SQL dispatch, conversation-state
-bookkeeping, the regex safety-nets from §3.2 — is plain Python, reused
-directly rather than reimplemented "in LangChain style." LangChain has no
-abstraction for "cross-encoder-rerank a fused RRF pool" or "does this query
-mention a health condition" — these are just Python, and reimplementing
-already-tested, hard-won logic a second time would only add a second,
-divergent copy to keep in sync.
+bookkeeping, the regex safety-nets from §3.2 — is plain Python rather than
+forced into a LangChain abstraction it doesn't naturally fit. LangChain has
+no primitive for "cross-encoder-rerank a fused RRF pool" or "does this
+query mention a health condition" — these are just Python, kept in
+`hybrid_core.py` and called directly from the LangChain entrypoint so the
+retrieval-decision logic exists in exactly one place.
 
 A custom retriever/embeddings wrapper is used instead of `langchain_qdrant`'s
 default integration where the project's Qdrant payload shape (flat,
@@ -332,7 +332,7 @@ the box.
 
 ### 7.1 Gateway: multi-key rotation, proactive budgeting, fallback
 
-`groq_gateway_invoke()` reimplements, LangChain-natively, a three-layer call
+`groq_gateway_invoke()` implements, LangChain-natively, a three-layer call
 strategy:
 
 1. **Proactive budget check** — before attempting a Groq key, a per-key
@@ -379,23 +379,23 @@ decompose-then-verify LLM-as-judge technique:
 - **Context recall** — did retrieval surface what a good reference answer
   would need?
 
-**`eval/ragas_metrics.py` + `eval/run_ragas_eval.py`** — a hand-rolled
-implementation, routed through `generation/gateway.py::complete()` so every
-judge call gets the same multi-key rotation, proactive token-budget
-tracking, and HF fallback as normal pipeline traffic. This is the routine,
-cheap-to-run harness.
+**`eval/ragas_metrics.py` + `eval/run_ragas_eval.py`** — a lightweight,
+dependency-free implementation, routed through
+`generation/gateway.py::complete()` so every judge call gets the same
+multi-key rotation, proactive token-budget tracking, and HF fallback as
+normal pipeline traffic. This is the routine, cheap-to-run harness.
 
-**`eval/run_real_ragas.py`** — the actual `ragas` PyPI package, as a
-real second opinion from a community-maintained implementation rather than
-this project's own. Getting it running against this stack required
-working around three real upstream bugs (documented in the script's own
-docstring: an eager, unused `ChatVertexAI` import broken against this
-project's `langchain-community` version; an outdated `instructor` pin;
-`ragas`'s own `provider="groq"` path calling an Anthropic-shaped client
-method) and adding the same multi-key rotation the hand-rolled harness
-gets from the gateway (a single hardcoded key hit Groq's *daily* quota
-mid-run on live testing — the retry/backoff that handles a transient
-per-minute limit is useless against that, rotation is the real fix). A
+**`eval/run_real_ragas.py`** — the `ragas` PyPI package itself, as a
+second opinion from a community-maintained implementation. Getting it
+running against this stack required working around three real upstream
+bugs (documented in the script's own docstring: an eager, unused
+`ChatVertexAI` import broken against this project's `langchain-community`
+version; an outdated `instructor` pin; `ragas`'s own `provider="groq"`
+path calling an Anthropic-shaped client method) and adding the same
+multi-key rotation the other harness gets from the gateway (a single
+hardcoded key hit Groq's *daily* quota mid-run on live testing — the
+retry/backoff that handles a transient per-minute limit is useless against
+that, rotation is the real fix). A
 full run found a genuine measurement bug in the script itself: it only
 passed retrieved KB chunks as context to the judge, so every claim
 legitimately grounded in `products.sqlite` instead (a structured-tool
@@ -419,7 +419,7 @@ Offline regression tests (no LLM/network cost — pure-function checks with
 fixture data, or LLM calls monkeypatched to cost nothing) exist per module
 and are run any time that module changes: retrieval fusion/exclusion
 logic, the consistency false-positive fixes, the token-budget ledger, the
-security guardrails below, and the hand-rolled RAGAS metrics' own scoring
+security guardrails below, and the custom RAGAS-style metrics' own scoring
 functions.
 
 ---

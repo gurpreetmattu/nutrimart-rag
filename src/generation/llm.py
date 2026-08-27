@@ -15,8 +15,7 @@ GET /openai/v1/models. Swapped to openai/gpt-oss-120b, currently
 available on the same account. Check console.groq.com / the models
 endpoint for current rate limits and available models — these change.
 
-Enforces the typed-claim system from project_state_summary.md's pipeline
-design: every non-obvious claim in the answer must be tagged
+Enforces the typed-claim system: every non-obvious claim in the answer must be tagged
 [FACT] / [DERIVED CALCULATION] / [INTERPRETATION] / [REGULATORY] / [UNCERTAIN]
 and non-FACT claims must cite which retrieved chunk they came from.
 """
@@ -31,8 +30,8 @@ GENERATION_MODEL = "openai/gpt-oss-120b"  # kept for reference; gateway.py's GRO
 
 # 'low', not None/'medium' (Groq's default) — real evidence, not a guess,
 # though from a smaller sample than ideal (see caveat below). Multiple real
-# generate_answer() calls this session (2026-08-19, PHASE3_TESTING_LOG.md
-# Finding 19) spent 800-1100+ of ~1300 completion tokens (up to ~85%) on
+# generate_answer() calls (2026-08-19) spent 800-1100+ of ~1300 completion
+# tokens (up to ~85%) on
 # hidden reasoning at the default effort. One real call at 'low' on a
 # similarly-shaped query spent only 21 reasoning tokens — a roughly 97%
 # reduction — while the visible answer stayed fully compliant with
@@ -143,10 +142,10 @@ as-is."""
 
 def rewrite_query(original_query: str, usage_out: list | None = None) -> str:
     """
-    Corrective-retry step (project_state_summary.md pipeline step 5): called
-    by ask_hybrid.py when the first retrieval pass's top reranked chunk
-    scores below RERANK_SCORE_THRESHOLD. One extra LLM call via gateway.complete()
-    (Groq, falling back to Hugging Face on quota exhaustion).
+    Corrective-retry step: called when the first retrieval pass's top
+    reranked chunk scores below RERANK_SCORE_THRESHOLD. One extra LLM call
+    via gateway.complete() (Groq, falling back to Hugging Face on quota
+    exhaustion).
     """
     content = complete(
         REWRITE_SYSTEM_PROMPT, original_query,
@@ -156,9 +155,8 @@ def rewrite_query(original_query: str, usage_out: list | None = None) -> str:
         # token counts of 67-126 seen on this exact call, out of a 128
         # budget). At 128 this reasoning alone could exhaust the whole
         # budget, leaving empty/truncated content and masquerading as
-        # "the model returned nothing" (see llm.py's fallback below,
-        # and PHASE3_TESTING_LOG.md Finding 10 bug #4) when it was really
-        # a too-small max_tokens for this model shape.
+        # "the model returned nothing" (see the fallback below) when it
+        # was really a too-small max_tokens for this model shape.
         max_tokens=400, call_name="rewrite_query",
         reasoning_effort=GENERATION_REASONING_EFFORT, usage_out=usage_out,
     )
@@ -193,8 +191,8 @@ def build_known_facts_block(known_facts: dict) -> str:
     Formats conversation/state.py's known_facts dict for the prompt, same
     "labeled block, then content" shape build_context_block() already uses
     for retrieved chunks — this is what makes SYSTEM_PROMPT's evidence
-    rule 4 actually checkable (problems.md Problem 4: the sugar value
-    being "forgotten" a few turns later).
+    rule 4 actually checkable (a real observed failure without it: the
+    sugar value being "forgotten" a few turns later).
     """
     lines = [f"- {attr} = {fact['value']}{fact['unit']} (from {fact['source']})"
               for attr, fact in known_facts.items()]
@@ -216,8 +214,8 @@ def generate_answer(
 
     # `structured_context`, if given (added 2026-08-21): a structured tool's
     # own already-cited answer from THIS SAME turn (e.g. "may contain
-    # milk" from check_ingredient_or_allergen), when ask_hybrid.py's tool
-    # loop called both a structured tool AND search_knowledge_base. Without
+    # milk" from check_ingredient_or_allergen), when the tool-calling loop
+    # called both a structured tool AND search_knowledge_base. Without
     # this, generate_answer() only ever saw the retrieved chunks — it had
     # no idea a structured tool had already established a fact this turn,
     # so it would independently (and sometimes wrongly) re-derive or hedge
@@ -250,9 +248,9 @@ User question: {query}"""
         # rewrite_query() above. Confirmed directly on a real q08-shaped
         # call: at 1024 this model spent as much as 1103 reasoning tokens
         # before any visible content, hitting finish_reason="length" with
-        # truncated or fully empty content (root cause of the unexplained
-        # q08 discrepancy in PHASE3_TESTING_LOG.md Finding 10 — not a
-        # retrieval or routing bug, retrieval was fine at 0.631 rerank).
+        # truncated or fully empty content (root cause of a real q08
+        # discrepancy — not a retrieval or routing bug, retrieval was fine
+        # at 0.631 rerank).
         max_tokens=2048, call_name="generate_answer",
         reasoning_effort=GENERATION_REASONING_EFFORT, usage_out=usage_out,
     )

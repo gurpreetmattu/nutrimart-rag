@@ -1,7 +1,7 @@
 """
-conversation/state.py — the lightweight, structured conversation memory
-problems.md Section 10 asks for: not the whole conversation, just the
-important facts already established (product, topic/attribute in focus,
+conversation/state.py — lightweight, structured conversation memory: not
+the whole conversation, just the important facts already established
+(product, topic/attribute in focus,
 and any concrete values already given), so a follow-up like "is this too
 much?" doesn't need to re-derive them from scratch.
 

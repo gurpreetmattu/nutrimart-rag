@@ -1,32 +1,32 @@
 """
-eval/ragas_metrics.py — hand-rolled RAGAS-equivalent metrics (faithfulness,
-answer relevancy, context precision, context recall), scoped 2026-08-24 and
-implemented here rather than installing the real `ragas` pip package.
+eval/ragas_metrics.py — a lightweight, dependency-free implementation of
+RAGAS-style metrics (faithfulness, answer relevancy, context precision,
+context recall), routed entirely through this project's own LLM call
+layer rather than the `ragas` pip package's own judge-call path.
 
-Why hand-rolled, not the real package: `ragas` calls its judge LLM through
-LangChain's own wrapper abstractions. This project's two original pipelines
-(`ask.py`, `ask_hybrid.py`) are deliberately plain-Python controls with no
-framework — and even for the LangChain pipeline this evaluates
-(`ask_langchain_hybrid.py`), wiring `ragas` in would mean its judge calls
-bypass this project's own quota management (`generation/gateway.py`'s
-multi-key rotation, `generation/token_budget.py`'s proactive per-key daily
-ledger) and hit Groq directly, uncoordinated with every other call this app
-makes. Every judge call here instead goes through
+Why keep this alongside the real `ragas` package (see
+`eval/run_real_ragas.py`): `ragas` calls its judge LLM through its own
+wrapper abstractions, which would mean its judge calls bypass this
+project's own quota management (`generation/gateway.py`'s multi-key
+rotation, `generation/token_budget.py`'s proactive per-key daily ledger)
+and hit Groq directly, uncoordinated with every other call this app makes.
+Every judge call here instead goes through
 `generation/gateway.py::complete()` — same multi-key rotation, same
-proactive budget check, same HF fallback, same usage tracking, for free.
+proactive budget check, same HF fallback, same usage tracking, for free —
+making this the routine, cheap-to-run harness, with the real package
+available as a second opinion when wanted.
 
 Same technique RAGAS itself uses (decompose an answer into atomic claims,
-then LLM-verify each claim against context) — just without the LangChain
-dependency chain. One real, disclosed simplification from RAGAS's own
-default behavior: context precision here is ONE batched judge call across
-all retrieved chunks (unweighted precision — fraction judged relevant),
-not RAGAS's default of one call per chunk with rank-weighting. That's a
-deliberate cost-control choice (this project's chunks run 300-800+ tokens
-each; one call per chunk would roughly double this metric's own cost) —
-disclosed here, not silently cut.
+then LLM-verify each claim against context). One real, disclosed
+simplification from RAGAS's own default behavior: context precision here
+is ONE batched judge call across all retrieved chunks (unweighted
+precision — fraction judged relevant), not RAGAS's default of one call per
+chunk with rank-weighting. That's a deliberate cost-control choice (this
+project's chunks run 300-800+ tokens each; one call per chunk would
+roughly double this metric's own cost) — disclosed here, not silently cut.
 
 Every function takes real pipeline output (`chunks` in the exact dict shape
-`ask_hybrid.py`/`ask_langchain_hybrid.py` retrieval returns —
+`ask_langchain_hybrid.py` retrieval returns —
 `source_file`/`heading`/`text`/`rerank_score`) and returns a dict with a
 `score` (float 0-1, or None if nothing could be scored) plus the raw
 judge output for manual inspection — scores alone hide WHY something

@@ -28,7 +28,7 @@ load_dotenv()
 # Windows' default console codepage (cp1252) can't encode characters an LLM
 # response may legitimately contain (em dashes, curly quotes, the non-
 # breaking hyphen U+2011, etc.) — confirmed real crash 2026-08-20 printing
-# a Groq-rewritten query from ask_hybrid.py's corrective-retry path. Every
+# a Groq-rewritten query from the hybrid pipeline's corrective-retry path. Every
 # CLI entrypoint and the API server import this module, so reconfiguring
 # stdout/stderr here once covers all of them instead of patching each
 # script's __main__ block separately. Guarded in a try/except: some stream
