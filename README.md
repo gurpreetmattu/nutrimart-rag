@@ -7,6 +7,10 @@ for a mock quick-commerce app, with a React frontend. Hybrid retrieval
 tool-calling for routing, SQL-grounded structured lookups, conversation
 memory, and a numeric groundedness check.
 
+**Live demo:** https://nutrimart-rag-33924421255.asia-south1.run.app/
+(Cloud Run, scales to zero — the first request after idle may take a few
+seconds to cold-start.)
+
 This is the LangChain half of a larger portfolio project that also
 includes hand-rolled (no-framework) pipelines as a comparison baseline —
 this repo contains only the LangChain-native side.
