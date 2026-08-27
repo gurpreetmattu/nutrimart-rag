@@ -5,12 +5,14 @@ import SortBar from "../components/SortBar";
 import ProductCard from "../components/ProductCard";
 import SkeletonCard from "../components/SkeletonCard";
 import RecentlyViewedRail from "../components/RecentlyViewedRail";
+import WelcomeBanner from "../components/WelcomeBanner";
+import PromoCarousel from "../components/PromoCarousel";
 import { priceInfo } from "../helpers";
 
 const SKELETON_COUNT = 10;
 
 export default function Home() {
-  const { products, category, search, sort, loading } = useProducts();
+  const { products, category, search, setSearch, sort, loading } = useProducts();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -45,6 +47,8 @@ export default function Home() {
 
   return (
     <main id="home-view">
+      {!search && <WelcomeBanner />}
+      {!loading && products.length > 0 && !search && <PromoCarousel />}
       {!loading && products.length > 0 && !search && <RecentlyViewedRail />}
       <CategoryBar />
       {!loading && products.length > 0 && <SortBar />}
@@ -55,6 +59,7 @@ export default function Home() {
           <div className="empty-state">
             <span className="empty-state-icon" aria-hidden="true">🔍</span>
             <p className="empty-note">No products match "{search}".</p>
+            <button className="pill-link" onClick={() => setSearch("")}>Clear search</button>
           </div>
         ) : (
           sorted.map((p) => <ProductCard key={p.product_id} product={p} />)

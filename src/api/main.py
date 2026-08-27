@@ -40,10 +40,14 @@ from api.resources import get_resources
 from api.response_helpers import Source, _confidence, _build_sources
 from api.security import check_rate_limit, detect_prompt_injection
 from api.session_store import get_session, save_session
+from api.auth import router as auth_router
+from api.orders import router as orders_router
 from conversation.resolve import resolve_followup
 from conversation.state import set_product, default_state
 from generation.consumer_view import to_consumer_friendly
 from eval.faithfulness_score import faithfulness_score
+from structured.users import init_users_table
+from structured.orders import init_orders_tables
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend-react" / "dist"
 
@@ -53,10 +57,18 @@ async def lifespan(app: FastAPI):
     # Loads the embedding model / Qdrant client / BM25 index / cross-encoder
     # once, up front, rather than paying that cost on the first request.
     get_resources()
+    conn = get_sqlite_conn()
+    try:
+        init_users_table(conn)
+        init_orders_tables(conn)
+    finally:
+        conn.close()
     yield
 
 
 app = FastAPI(title="Quick-Commerce RAG API", lifespan=lifespan)
+app.include_router(auth_router)
+app.include_router(orders_router)
 
 
 class ChatRequest(BaseModel):

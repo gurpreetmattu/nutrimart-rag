@@ -46,7 +46,11 @@ export default function ProductPage() {
     return (
       <div id="product-view">
         <div id="product-content">
-          <p className="empty-note">Product not found.</p>
+          <div className="empty-state">
+            <span className="empty-state-icon" aria-hidden="true">🔍</span>
+            <p className="empty-note">Product not found.</p>
+            <Link to="/" className="pill-link">Back to Home</Link>
+          </div>
         </div>
       </div>
     );

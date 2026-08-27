@@ -1,8 +1,7 @@
 import { useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
-import { useToast } from "../context/ToastContext";
 import { ProductMedia } from "./ProductMedia";
 import QtyControl from "./QtyControl";
 import { priceInfo } from "../helpers";
@@ -10,7 +9,7 @@ import { priceInfo } from "../helpers";
 export default function CartDrawer() {
   const { cart, drawerOpen, closeDrawer, totalCount } = useCart();
   const { products } = useProducts();
-  const { showToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -36,7 +35,11 @@ export default function CartDrawer() {
   const total = useMemo(() => lines.reduce((sum, l) => sum + l.price.price * l.qty, 0), [lines]);
 
   const handleCheckout = () => {
-    showToast("This is a demo app — checkout isn't implemented.", { icon: "🛒" });
+    closeDrawer();
+    // ProtectedRoute handles the "not logged in" redirect-to-/login itself
+    // once we navigate there, remembering /checkout as the place to return
+    // to after login — no separate auth check needed here.
+    navigate("/checkout");
   };
 
   return (
