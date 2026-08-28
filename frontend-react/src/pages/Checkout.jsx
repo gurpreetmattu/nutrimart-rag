@@ -72,7 +72,7 @@ export default function Checkout() {
                 {l.product.pack_size?.value ? `${l.product.pack_size.value}${l.product.pack_size.unit || ""}` : ""}
               </div>
               <div className="cart-line-price">
-                ₹{l.price.price * l.qty} <span className="checkout-qty-label">× {l.qty}</span>
+                ₹{l.price.price} <span className="checkout-qty-label">× {l.qty}</span>
               </div>
             </div>
           </div>
