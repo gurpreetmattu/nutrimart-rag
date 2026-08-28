@@ -40,7 +40,19 @@ export default function ProductPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, recordView]);
+    // recordView deliberately NOT a dependency — this effect's job is
+    // "fetch + record once per product id", not "re-run whenever
+    // recordView's identity changes". RecentlyViewedContext.jsx's
+    // recordView is a useCallback keyed on [ids, isAuthenticated]; calling
+    // it updates ids, which gives it a NEW identity on every call, which
+    // (if listed here) re-triggers this effect, which calls recordView
+    // again, which changes its identity again — an infinite loop.
+    // Confirmed real, live: the product page never finished loading,
+    // stuck flickering between the skeleton and a fresh fetch, with
+    // /api/products/<id> and the gallery image requests firing hundreds
+    // of times a second.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (notFound) {
     return (
