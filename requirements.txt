@@ -3,6 +3,7 @@ uvicorn[standard]
 bcrypt
 PyJWT
 email-validator
+psycopg[binary]
 qdrant-client
 sentence-transformers
 rank-bm25

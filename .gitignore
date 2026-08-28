@@ -4,6 +4,7 @@ __pycache__/
 .env
 db/
 qdrant_storage/
+postgres_data/
 *.sqlite
 *.sqlite3
 token_budget_state.json

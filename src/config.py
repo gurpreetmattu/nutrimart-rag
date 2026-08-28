@@ -9,6 +9,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import psycopg
+from psycopg.rows import dict_row
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 
@@ -64,6 +66,26 @@ QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY")
 # instead. See README's Deploy section.
 DB_PATH = Path(os.environ.get("DB_PATH", str(Path(__file__).resolve().parent.parent / "db" / "products.sqlite")))
 
+# users/orders/order_items live here, NOT in products.sqlite — Cloud Run
+# (this project's deploy target) runs with min-instances=0, so a
+# container's local filesystem (including a SQLite file baked into the
+# image) does not survive scale-to-zero: every signup/order written to it
+# vanished the moment the next request cold-started a fresh container from
+# the image. Confirmed as the real cause of a live "works right after
+# signup, 'invalid password' 10-15 minutes later" report — not an auth bug,
+# a storage-durability bug. products.sqlite itself is unaffected by this
+# (it's read-only, deterministic, rebuilt into every image at build time,
+# so a fresh container always has the right product data) — only the
+# tables an actual user writes to at runtime needed to move off local
+# disk. The default here matches the docker-compose `postgres` service for
+# local dev; a deployed environment sets DATABASE_URL to a managed
+# instance (Supabase's free tier) instead, same QDRANT_URL/QDRANT_HOST
+# pattern used above. Deliberately no SQLite fallback for these tables —
+# that would silently reintroduce the exact bug this exists to fix.
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://nutrimart:nutrimart@localhost:5432/nutrimart"
+)
+
 # bge models expect this instruction prefix on the QUERY side only, not on
 # documents. Omitting this measurably hurts bge retrieval quality — it's a
 # documented model requirement, not a retrieval-strategy choice, so it's
@@ -82,3 +104,10 @@ def get_sqlite_conn() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def get_pg_conn() -> psycopg.Connection:
+    # dict_row so callers can keep the same row["field"] access pattern
+    # get_sqlite_conn()'s sqlite3.Row already gave them — no call-site
+    # changes needed beyond the ? -> %s placeholder swap SQL itself needs.
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)

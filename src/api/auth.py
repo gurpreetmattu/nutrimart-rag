@@ -19,7 +19,7 @@ import jwt
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from pydantic import BaseModel, EmailStr, Field
 
-from config import get_sqlite_conn
+from config import get_pg_conn
 from structured.users import (
     create_user,
     get_user_by_email,
@@ -94,7 +94,7 @@ def get_current_user(access_token: str | None = Cookie(default=None, alias=COOKI
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired session")
 
-    conn = get_sqlite_conn()
+    conn = get_pg_conn()
     try:
         user = get_user_by_id(conn, payload["sub"])
     finally:
@@ -117,7 +117,7 @@ def get_optional_user(access_token: str | None = Cookie(default=None, alias=COOK
 
 @router.post("/signup", response_model=UserOut, status_code=201)
 def signup(req: SignupRequest, response: Response):
-    conn = get_sqlite_conn()
+    conn = get_pg_conn()
     try:
         init_users_table(conn)
         if get_user_by_email(conn, req.email) is not None:
@@ -132,7 +132,7 @@ def signup(req: SignupRequest, response: Response):
 
 @router.post("/login", response_model=UserOut)
 def login(req: LoginRequest, response: Response):
-    conn = get_sqlite_conn()
+    conn = get_pg_conn()
     try:
         init_users_table(conn)
         user = get_user_by_email(conn, req.email)
@@ -161,7 +161,7 @@ def me(user: dict = Depends(get_current_user)):
 
 @router.patch("/me", response_model=UserOut)
 def update_me(req: UpdateProfileRequest, user: dict = Depends(get_current_user)):
-    conn = get_sqlite_conn()
+    conn = get_pg_conn()
     try:
         if req.email.lower().strip() != user["email"]:
             existing = get_user_by_email(conn, req.email)
@@ -175,7 +175,7 @@ def update_me(req: UpdateProfileRequest, user: dict = Depends(get_current_user))
 
 @router.post("/change-password", status_code=204)
 def change_password(req: ChangePasswordRequest, user: dict = Depends(get_current_user)):
-    conn = get_sqlite_conn()
+    conn = get_pg_conn()
     try:
         row = get_user_by_id(conn, user["user_id"])
         if row is None or not verify_password(req.current_password, row["password_hash"]):

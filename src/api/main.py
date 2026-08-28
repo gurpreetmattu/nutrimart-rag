@@ -33,7 +33,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from config import get_sqlite_conn
+from config import get_pg_conn, get_sqlite_conn
 from routing.query_router import classify_query
 from ask_langchain_hybrid import ask as ask_langchain_hybrid, INSUFFICIENT_EVIDENCE_MESSAGE
 from api.resources import get_resources
@@ -57,12 +57,15 @@ async def lifespan(app: FastAPI):
     # Loads the embedding model / Qdrant client / BM25 index / cross-encoder
     # once, up front, rather than paying that cost on the first request.
     get_resources()
-    conn = get_sqlite_conn()
+    # users/orders/order_items live in Postgres now (see
+    # structured/users.py's docstring) — this is the one place both DBs'
+    # startup init happens together.
+    pg_conn = get_pg_conn()
     try:
-        init_users_table(conn)
-        init_orders_tables(conn)
+        init_users_table(pg_conn)
+        init_orders_tables(pg_conn)
     finally:
-        conn.close()
+        pg_conn.close()
     yield
 
 

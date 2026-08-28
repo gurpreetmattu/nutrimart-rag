@@ -7,3 +7,18 @@ services:
       - "6334:6334"
     volumes:
       - ./qdrant_storage:/qdrant/storage
+
+  # Local counterpart to the managed Postgres (Supabase/Cloud SQL) a real
+  # deploy points DATABASE_URL at — see config.py::get_pg_conn(). Holds
+  # users/orders/order_items only; products.sqlite (deterministic, rebuilt
+  # from data/raw every ingestion run) stays on SQLite as before.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nutrimart
+      POSTGRES_PASSWORD: nutrimart
+      POSTGRES_DB: nutrimart
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
