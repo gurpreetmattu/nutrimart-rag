@@ -126,6 +126,26 @@ trans_fat_wrong_answer = "[FACT] This product has 2.0 g of trans fat."
 check("a genuine wrong value for trans_fat_g itself still gets flagged",
       "CONTRADICTS" in check_conversation_consistency(trans_fat_wrong_answer, _state("trans_fat_g", 0.0)))
 
+# --- Real production crash (2026-08-28): KeyError on an untracked ---------
+# --- known_facts attribute --------------------------------------------
+# The sibling-attribute fix above built its cross-reference dict from
+# _ATTRIBUTE_WORDS' own (narrower) key set, then indexed it with `[attribute]`
+# for every key in known_facts — but known_facts legitimately contains many
+# more fields (caffeine, calcium, iron, potassium, vitamin C, and more, via
+# get_all_nutrition_facts()/NUTRITION_LABELS) than _ATTRIBUTE_WORDS tracks.
+# Confirmed real: a live Cloud Run 500 crash, KeyError: 'caffeine_mg', the
+# very first time a caffeinated product's known_facts reached this code path
+# post-deploy. Every _ATTRIBUTE_WORDS-untracked field must degrade to "no
+# positions found" (pass through unchanged), never crash.
+caffeine_answer = "[FACT] This product contains 10.0 mg of caffeine per serving."
+caffeine_state = _state("caffeine_mg", 10.0, unit="mg")
+try:
+    caffeine_result = check_conversation_consistency(caffeine_answer, caffeine_state)
+    check("an untracked known_facts attribute (caffeine_mg) does not crash",
+          caffeine_result == caffeine_answer)
+except KeyError as e:
+    check(f"an untracked known_facts attribute (caffeine_mg) does not crash (raised {e!r})", False)
+
 # --- No known_facts at all: always a no-op ---------------------------------
 
 check("no known_facts means the answer passes through completely unchanged",

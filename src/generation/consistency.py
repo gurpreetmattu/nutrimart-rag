@@ -234,7 +234,17 @@ def _find_contradiction(block_text: str, known_facts: dict) -> str | None:
     all_positions = {attr: _attribute_positions(lower, attr) for attr in _ATTRIBUTE_WORDS}
 
     for attribute, fact in known_facts.items():
-        positions = all_positions[attribute]
+        # .get(), not [attribute] — confirmed real production crash
+        # (KeyError: 'caffeine_mg') 2026-08-28: known_facts can legitimately
+        # contain far more fields than this module's own _ATTRIBUTE_WORDS
+        # tracks (get_all_nutrition_facts()/NUTRITION_LABELS cover caffeine,
+        # calcium, iron, potassium, vitamin C, and more — this module only
+        # ever needed the handful of fields with a real sibling-collision
+        # risk). An attribute _ATTRIBUTE_WORDS doesn't recognize at all has
+        # no positions to find in the text either way, so this degrades to
+        # the same "nothing found, skip" behavior as _attribute_positions()
+        # already returning an empty list for a tracked-but-absent mention.
+        positions = all_positions.get(attribute, [])
         if not positions:
             continue
 
