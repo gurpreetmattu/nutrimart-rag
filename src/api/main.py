@@ -42,12 +42,14 @@ from api.security import check_rate_limit, detect_prompt_injection
 from api.session_store import get_session, save_session
 from api.auth import router as auth_router
 from api.orders import router as orders_router
+from api.user_state import router as user_state_router
 from conversation.resolve import resolve_followup
 from conversation.state import set_product, default_state
 from generation.consumer_view import to_consumer_friendly
 from eval.faithfulness_score import faithfulness_score
 from structured.users import init_users_table
 from structured.orders import init_orders_tables
+from structured.user_state import init_user_state_tables
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend-react" / "dist"
 
@@ -64,6 +66,7 @@ async def lifespan(app: FastAPI):
     try:
         init_users_table(pg_conn)
         init_orders_tables(pg_conn)
+        init_user_state_tables(pg_conn)
     finally:
         pg_conn.close()
     yield
@@ -72,6 +75,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Quick-Commerce RAG API", lifespan=lifespan)
 app.include_router(auth_router)
 app.include_router(orders_router)
+app.include_router(user_state_router)
 
 
 class ChatRequest(BaseModel):

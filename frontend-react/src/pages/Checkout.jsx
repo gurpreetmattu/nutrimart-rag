@@ -8,7 +8,7 @@ import { ProductMedia } from "../components/ProductMedia";
 import { priceInfo } from "../helpers";
 
 export default function Checkout() {
-  const { cart, decr, incr } = useCart();
+  const { cart, clearCart } = useCart();
   const { products } = useProducts();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -34,11 +34,7 @@ export default function Checkout() {
     setPlacing(true);
     try {
       const order = await checkout(lines.map((l) => ({ product_id: l.product.product_id, quantity: l.qty })));
-      // Clear the cart line by line (CartContext has no bulk-clear — this
-      // mirrors what decr() already does down to zero for each line).
-      lines.forEach((l) => {
-        for (let i = 0; i < l.qty; i++) decr(l.product.product_id);
-      });
+      await clearCart();
       showToast("Order placed!", { icon: "✅" });
       navigate(`/orders/${order.order_id}`, { replace: true });
     } catch (err) {

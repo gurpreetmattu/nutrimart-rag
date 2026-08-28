@@ -94,6 +94,96 @@ export async function fetchOrder(orderId) {
   return res.json();
 }
 
+// --- Per-account cart/recently-viewed/compare. Only ever called once the
+// user is authenticated (see the *Context.jsx files) -- a guest never
+// hits these, everything stays localStorage-only for them. ---
+
+export async function fetchCart() {
+  const res = await authedFetch("/cart");
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function setCartItem(productId, quantity) {
+  const res = await authedFetch(`/cart/${productId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ quantity }),
+  });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function clearCartServer() {
+  const res = await authedFetch("/cart", { method: "DELETE" });
+  await throwIfNotOk(res);
+}
+
+export async function mergeCart(items) {
+  const res = await authedFetch("/cart/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function fetchRecentlyViewed() {
+  const res = await authedFetch("/recently-viewed");
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function recordView(productId) {
+  const res = await authedFetch(`/recently-viewed/${productId}`, { method: "POST" });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function mergeRecentlyViewed(ids) {
+  const res = await authedFetch("/recently-viewed/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function fetchCompare() {
+  const res = await authedFetch("/compare");
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function toggleCompareServer(productId) {
+  const res = await authedFetch(`/compare/${productId}`, { method: "PUT" });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function removeFromCompareServer(productId) {
+  const res = await authedFetch(`/compare/${productId}`, { method: "DELETE" });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
+export async function clearCompareServer() {
+  const res = await authedFetch("/compare", { method: "DELETE" });
+  await throwIfNotOk(res);
+}
+
+export async function mergeCompare(ids) {
+  const res = await authedFetch("/compare/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+  await throwIfNotOk(res);
+  return res.json();
+}
+
 export async function fetchProducts() {
   const res = await fetch(`${API}/products`);
   return res.json();
