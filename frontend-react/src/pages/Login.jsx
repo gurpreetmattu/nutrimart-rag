@@ -16,8 +16,19 @@ export default function Login() {
   // An already-logged-in visitor landing here (bookmark, back button, a
   // stale link) has nothing to do on this page — showing the form again
   // just invites confusion. Same fix as Signup.jsx.
+  //
+  // Redirects to `redirectTo`, NOT a hardcoded "/" — confirmed real bug:
+  // this guard's condition also becomes true the instant handleSubmit's
+  // own `await login(...)` resolves (isAuthenticated flips before that
+  // async function's next line runs), so the component re-renders and
+  // hits this early return BEFORE handleSubmit's own
+  // `navigate(redirectTo, ...)` call executes. With a hardcoded "/" here,
+  // that race always won and silently discarded the real destination —
+  // e.g. a guest clicking Checkout, sent to /login with `from: "/checkout"`
+  // state, always landed on Home after logging in instead of back at
+  // checkout. Both paths must agree on the same target.
   if (!loading && isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={redirectTo} replace />;
   }
 
   const handleSubmit = async (e) => {
