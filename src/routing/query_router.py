@@ -70,6 +70,12 @@ REGULATORY_OVERRIDE_TERMS = [
     # containing "too much" verbatim, so this term catches both phrasings
     # with one entry).
     "too much",
+    # "too many" (plural — confirmed real, live, 2026-08-28): "does Kurkure
+    # Masala Munch have too many additives?" got the raw declared-
+    # ingredients list dumped back with zero judgment about "too many" —
+    # this exact singular/plural gap ("too much" was added above but never
+    # "too many") in hybrid_core.py's _HEALTH_JUDGMENT_RE.
+    "too many",
     # "good source of"/"rich in"/"high in"/"low in" (added 2026-08-26,
     # Finding 40 — a proactive stress-test batch run right after a live
     # vegan-question bug report): "is this a good source of protein?"
@@ -85,6 +91,99 @@ REGULATORY_OVERRIDE_TERMS = [
     # tool-loop-level fix alone was insufficient, same two-layer shape as
     # q27's original router+tool-loop bug pair.
     "good source of", "rich in", "high in", "low in", "excellent source",
+    # "-free"/" free" claim phrasing (found in a systematic adversarial
+    # audit, 2026-08-28) — same bug shape as "good source of"/"claim"
+    # above (a nutrient-content-CLAIM question, not a request for the raw
+    # number), just never extended to this specific phrasing at this
+    # fast-path layer. Confirmed real: "is Kurkure Masala Munch
+    # sodium-free?" fast-pathed straight to a bare sodium_mg number
+    # (542mg) via the bare "sodium" NUTRITION_FIELD_PATTERNS trigger,
+    # completely bypassing the actual question — whether the product
+    # qualifies for FSSAI's "free" nutrient-content claim threshold, which
+    # is NOT the same as "the value is exactly zero." hybrid_core.py's
+    # _NUTRITIONAL_VERDICT_RE already covers "-free" phrasing for the
+    # tool-calling loop, but that loop never runs when this fast path
+    # already resolved a fact_field — same two-layer shape as q27's
+    # original router+tool-loop bug pair (Finding 31).
+    "-free", " free",
+    # "for kids/children/toddlers/babies", "pregnant" (found in the same
+    # systematic adversarial audit as "-free" above): "is the sugar content
+    # in Kurkure Masala Munch ok for kids?" fast-pathed to a bare
+    # total_sugars_g number, completely ignoring the actual question (is
+    # this appropriate for a child, not just what the number is).
+    # hybrid_core.py's _HEALTH_JUDGMENT_RE already has this exact phrase
+    # set for the tool-calling loop — duplicated here for the router's own
+    # fast path since importing hybrid_core.py here would be circular
+    # (hybrid_core.py imports structured/product_facts.py and
+    # retrieval/search_hybrid.py, both of which import this module).
+    "for kids", "for children", "for toddlers", "for babies", "pregnant",
+    # Full sync pass (2026-08-28) against hybrid_core.py's current
+    # _HEALTH_JUDGMENT_RE vocabulary, after finding the "-free"/"for kids"
+    # gaps above weren't isolated incidents — this router-level list and
+    # hybrid_core.py's regex have drifted out of sync repeatedly (Finding
+    # 31's q27, Finding 40's "good source of", now these). Can't import
+    # hybrid_core.py's regex directly here (circular import — see the "for
+    # kids" comment above), so this is a one-time full sync of every term
+    # _HEALTH_JUDGMENT_RE currently covers that wasn't already in this
+    # list, confirmed real for each: "is the caffeine in Diet Coke bad for
+    # diabetics?", "will the sugar in Kurkure Masala Munch spike my blood
+    # sugar?", "is the sodium in Britannia Brown Bread okay for someone
+    # with high cholesterol?", "would a doctor recommend the fat content
+    # in Britannia Brown Bread?" — all four fast-pathed to a bare number
+    # before this fix. "good for"/"ok for"/"okay for"/"fine for" as
+    # 2-word phrases (not bare "good"/"ok"/"fine") to avoid over-broadening
+    # this list into deferring nearly everything — "bad"/"suitable" already
+    # covered via "bad for"/"suitable for" the same way; "safe" was already
+    # a bare term above so "safe for" needed no separate entry.
+    "good for", "bad for", "ok for", "okay for", "fine for",
+    # "cholesterol" deliberately NOT added bare — unlike "diabetic"/"spike",
+    # it's also the literal nutrition field name itself, so a bare entry
+    # over-broadened this into deferring plain lookups like "what is the
+    # cholesterol content of X" (confirmed real during verification of this
+    # fix) — the actual risk case ("...okay for someone with high
+    # cholesterol") is already caught by the "okay for" phrase above.
+    "diabetic", "diabetics", "spike", "blood sugar", "recommend",
+    # "benefit(s) of" (confirmed real, live, 2026-08-28): "benefits of
+    # consuming this?" got Britannia Brown Bread's raw declared-ingredients
+    # list dumped back verbatim — a genuine live user report, not found by
+    # audit. This specific case didn't need this router-level entry (no
+    # NUTRITION_FIELD_PATTERNS/OTHER_FACT_PATTERNS keyword was present in
+    # the query, so it already deferred to the tool loop; the actual bug
+    # was hybrid_core.py's _HEALTH_JUDGMENT_RE not recognizing "benefits"
+    # as evaluative once inside that loop) — added here anyway per this
+    # list's own established sync-drift lesson, so a future query that DOES
+    # also contain a nutrition keyword ("what are the benefits of the sugar
+    # in this") doesn't reintroduce the same fast-path bypass.
+    "benefit of", "benefits of",
+    # Weight-loss/body-weight phrasing (added after a live bug report): "will
+    # this help me lose weight?" and "can I eat this if I'm watching my
+    # weight?" have no other override term, so without this they only
+    # avoided the OTHER_FACT_PATTERNS "weigh"->pack_size bug because that
+    # bare substring entry was removed above — kept here too as a second,
+    # independent line of defense so a body-weight health question always
+    # defers to the tool-calling loop rather than depending on no other
+    # fact-field phrase happening to match.
+    "lose weight", "losing weight", "weight loss", "watching my weight",
+    "watching your weight", "weight management",
+    # "i should"/"why should" (reversed word order from "should i", already
+    # covered above): "why I should drink this" is a real reported
+    # phrasing that "should i" alone doesn't catch.
+    "i should",
+    # "allergic" (confirmed real, live, 2026-08-28): "can Cadbury Dairy Milk
+    # Chocolate Bar cause an allergic reaction?" fast-pathed straight to a
+    # bare allergens dump ("contains milk, soy...") with zero reasoning
+    # about REACTION/RISK — not caught by OTHER_FACT_PATTERNS' exact
+    # "allergen" substring, but by _fuzzy_match_fact_field()'s typo-
+    # tolerance fallback: "allergic" scores above its 0.75 cutoff against
+    # "allergen". The fuzzy matcher isn't wrong to consider them related —
+    # the actual problem is that "can this CAUSE a reaction" is a risk
+    # question, not a "does this contain X" presence question, and no
+    # override term existed to defer it regardless of which matcher (exact
+    # or fuzzy) resolved the field. hybrid_core.py's _HEALTH_JUDGMENT_RE
+    # already covers "allergic reaction" for the tool-calling loop; this
+    # entry stops the router's OWN fast path from bypassing that loop
+    # entirely, same two-layer shape as every other entry in this list.
+    "allergic",
 ]
 
 # General structural override (added 2026-08-21 audit) — replaces the
@@ -161,6 +260,23 @@ _HEALTH_CONDITION_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Same structural-override principle as the two regexes above, for a third
+# shape: a quantity-multiplier question ("if I eat 3 packets...", "how many
+# packets equal 2000 calories") that also matches a NUTRITION_FIELD_PATTERNS
+# keyword. Confirmed real, live 2026-08-28: "if I eat 3 packets of Kurkure
+# Masala Munch how much sodium is that" fast-pathed to the bare per-100g
+# sodium number (693mg) and never multiplied by 3 — a genuinely wrong-shaped
+# answer (it answers "how much sodium per 100g", not what was actually
+# asked), since only the tool-calling loop's [DERIVED CALCULATION] tag can
+# compute a multi-serving amount; the deterministic SQL fast path can only
+# ever return the raw stored value.
+_QUANTITY_CALC_RE = re.compile(
+    r"\bif\s+i\s+(?:eat|have|drink|consume)\s+\d+\b"
+    r"|\b\d+\s+(?:packets?|servings?|bags?|pieces?|bottles?|cans?|bars?)\b"
+    r"|\bhow\s+many\s+(?:packets?|servings?|bags?|pieces?|bottles?|cans?|bars?)\b.{0,20}\bequal\b",
+    re.IGNORECASE,
+)
+
 # phrase (matched as a plain substring of the lowercased query) -> the
 # nutrition.values key in products_compiled.json / the nutrition_json
 # column. Order matters only in that more specific phrases should be
@@ -220,8 +336,16 @@ OTHER_FACT_PATTERNS: list[tuple[list[str], str]] = [
       "what's in", "what is in"], "ingredients_raw"),
     (["allergen", "contains milk", "contains wheat", "contains nuts",
       "contains soy", "may contain"], "allergens"),
-    (["pack size", "net weight", "how much does it weigh", "how big is",
-      "weigh"], "pack_size"),
+    # Bare "weigh" deliberately removed (confirmed real bug, live): as a
+    # substring it also matches "weigh" inside "weight" — "will this help
+    # me lose weight?" and "can I eat this if I'm watching my weight?" both
+    # got silently answered with the product's own pack size (325ml),
+    # nothing to do with what was actually asked. "how much does it weigh"
+    # already covers the genuine product-weight phrasing this was meant
+    # for; body-weight phrasing is now also caught structurally by the
+    # "lose weight"/"watching...weight" entries in REGULATORY_OVERRIDE_TERMS
+    # above, which defer to the tool-calling loop instead.
+    (["pack size", "net weight", "how much does it weigh", "how big is"], "pack_size"),
     (["what brand", "which brand", "who makes", "which company"], "brand"),
     (["what category", "which category"], "category"),
 ]
@@ -340,6 +464,25 @@ def find_product(query: str, conn: sqlite3.Connection) -> str | None:
     score wins; ties or a zero score return None rather than guessing —
     ambiguous product mentions (e.g. two products both branded
     "Coca-Cola") should fall through to retrieval, not a wrong SQL lookup.
+
+    A single overlapping BRAND token (Kurkure/Maggi/Yakult/Amul/...) is
+    treated as confident evidence on its own — that's the ordinary,
+    legitimate way a user names a product. A single overlapping NAME-only
+    token is NOT — several catalog products carry ordinary English/generic
+    words inside their own marketing name ("Britannia GOOD DAY Cashew
+    Cookies", "Kellogg's Multigrain Chocos ... No MAIDA", "Yogabar Daily
+    PROTEIN Bar", "McVitie's Digestive High FIBRE Biscuits"), so a single
+    such match fires on completely unrelated, product-agnostic questions —
+    confirmed real 2026-08-28: "is sugar good for health", "what is
+    maida?", "what is protein", "what is fibre" all silently resolved to
+    one specific, unrelated product purely because of this. Once resolved,
+    that wrong product_id doesn't just mis-tag one answer — it gets
+    written into conversation_state (hybrid_core.py's
+    _sync_product_into_state()) and silently scopes every later follow-up
+    to the wrong product too. A name-only match now needs 2+ independently
+    overlapping words (a real product mention, e.g. "good day cookies" or
+    "digestive biscuits", naturally has several) to count as confident
+    evidence — a single generic word doesn't.
     """
     q_tokens = _query_tokens(query)
     if not q_tokens:
@@ -347,11 +490,17 @@ def find_product(query: str, conn: sqlite3.Connection) -> str | None:
 
     best_id, best_score = None, 0
     for row in _load_products(conn):
-        name_tokens = _query_tokens(row["name"])
-        brand_tokens = _query_tokens(row["brand"] or "")
-        candidate_tokens = {t for t in (name_tokens | brand_tokens) if len(t) >= 3}
-        score = len(candidate_tokens & q_tokens)
+        name_tokens = {t for t in _query_tokens(row["name"]) if len(t) >= 3}
+        brand_tokens = {t for t in _query_tokens(row["brand"] or "") if len(t) >= 3}
+        name_only_tokens = name_tokens - brand_tokens
 
+        brand_hits = brand_tokens & q_tokens
+        name_only_hits = name_only_tokens & q_tokens
+
+        if not brand_hits and len(name_only_hits) < 2:
+            continue  # a single generic marketing-name word alone isn't confident evidence
+
+        score = len(brand_hits) + len(name_only_hits)
         if score > best_score:
             best_id, best_score = row["product_id"], score
         elif score == best_score and score > 0:
@@ -422,7 +571,8 @@ def classify_query(query: str, conn: sqlite3.Connection) -> RouteResult:
     product_id = find_product(query, conn)
 
     if (any(term in q for term in REGULATORY_OVERRIDE_TERMS)
-            or _COMPOUND_CLAUSE_RE.search(q) or _HEALTH_CONDITION_RE.search(q)):
+            or _COMPOUND_CLAUSE_RE.search(q) or _HEALTH_CONDITION_RE.search(q)
+            or _QUANTITY_CALC_RE.search(q)):
         return RouteResult(route="retrieval", product_id=product_id, fact_field=None)
 
     field_match_query = _strip_product_name(query, product_id, conn) if product_id else query

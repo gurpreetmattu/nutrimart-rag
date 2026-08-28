@@ -30,17 +30,29 @@ _WHITESPACE_RE = re.compile(r"[ \t]+")
 _BLANK_LINES_RE = re.compile(r"\n{3,}")
 
 # Catches a malformed citation the model sometimes writes as bare
-# "(products.sqlite)" instead of the proper "(products.sqlite, product_id)"
-# shape — confirmed real 2026-08-21, a diabetic-suitability answer leaked
-# "(products.sqlite)" straight into the consumer view because
-# CITATION_PART_RE (correctly) requires a comma-separated "file, ref" pair
-# and won't match this incomplete form, so _strip_citation_group's stricter
-# check left it alone. "products.sqlite" is a fixed literal used only for
-# this project's own citations, never a legitimate parenthetical aside, so
-# stripping it outright (with or without a following ref) carries none of
-# the false-positive risk _strip_citation_group's generic check guards
-# against for arbitrary "(...)" asides.
-_SQLITE_CITATION_RE = re.compile(r"\(\s*products\.sqlite\s*(?:,\s*[^()]+)?\)")
+# "(products.sqlite)" / "(all from products.sqlite)" / a bare KB filename
+# like "(ingredient_knowledge_base.md)" instead of the required
+# "(source_file.ext, ref)" shape — CITATION_PART_RE (correctly) requires a
+# comma-separated "file, ref" pair and won't match any of these incomplete
+# forms, so _strip_citation_group's stricter check leaves them alone.
+# "products.sqlite" and this project's own KB filenames are fixed literals
+# used only for this project's own citations, never a legitimate
+# parenthetical aside, so stripping any parenthetical that MENTIONS one of
+# them — anywhere inside the parens, not just as a strict prefix — carries
+# none of the false-positive risk _strip_citation_group's generic check
+# guards against for arbitrary "(...)" asides.
+#
+# Confirmed real, live (2026-08-28), two distinct leaks in the same
+# deployed answer: "...total sugars: 1.9 g (all from products.sqlite)."
+# (the original strict-prefix-only version of this regex required the
+# parens to START with "products.sqlite", so wording like "all from ..."
+# in front of it defeated the match entirely) and "...and DATEM (GMP for
+# bread) (ingredient_knowledge_base.md)." (a bare filename with no ref at
+# all — a shape this regex never covered before this fix, only the
+# products.sqlite case).
+_INTERNAL_FILENAME_CITATION_RE = re.compile(
+    r"\([^()]*\b(?:products\.sqlite|[\w\-]+\.(?:md|json|txt|csv))\b[^()]*\)", re.IGNORECASE,
+)
 
 # Catches the model occasionally citing with the internal prompt's own
 # "Source N: file.md, Chunk X" labeling (build_context_block() prefixes
@@ -75,7 +87,7 @@ def _strip_citation_group(match: re.Match) -> str:
 
 def to_consumer_friendly(answer: str) -> str:
     text = _TAG_RE.sub("", answer)
-    text = _SQLITE_CITATION_RE.sub("", text)
+    text = _INTERNAL_FILENAME_CITATION_RE.sub("", text)
     text = _SOURCE_LABEL_CITATION_RE.sub("", text)
     text = CITATION_GROUP_RE.sub(_strip_citation_group, text)
     text = text.replace(UNVERIFIED_MARKER.strip(), "")

@@ -75,7 +75,7 @@ from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from sentence_transformers import SentenceTransformer
 
 from config import EMBEDDING_MODEL, get_qdrant_client, get_sqlite_conn
-from routing.query_router import classify_query, _COMPOUND_CLAUSE_RE, _HEALTH_CONDITION_RE
+from routing.query_router import classify_query, _COMPOUND_CLAUSE_RE, _HEALTH_CONDITION_RE, _QUANTITY_CALC_RE
 from structured.product_facts import (
     answer_product_fact, get_product_row, get_all_nutrition_facts, NUTRITION_LABELS,
 )
@@ -102,6 +102,7 @@ from hybrid_core import (
     _NUTRITIONAL_VERDICT_RE, _fuzzy_verdict_trigger, _direct_ingredient_allergen_context,
     _build_agent_context_block, _sync_product_into_state,
     AGENT_SYSTEM_PROMPT_TEMPLATE, INSUFFICIENT_EVIDENCE_MESSAGE,
+    _META_SYSTEM_RE, META_REFUSAL_MESSAGE,
 )
 
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
@@ -521,6 +522,19 @@ def _route_and_retrieve(
     """
     resolved_query = resolve_followup(query, conversation_state) if conversation_state is not None else query
 
+    # Checked before classify_query()/the tool loop even run — a question
+    # about this system's own implementation (model identity, internal
+    # file/database structure, a raw SQL query) is never a product
+    # question, so it should never reach an LLM call at all. See
+    # _META_SYSTEM_RE's docstring in hybrid_core.py for the real, live bugs
+    # this replaces (a hallucinated "GPT-4" model-identity answer, a
+    # leaked SQL SELECT naming real table/column names, a description of
+    # ingredient_knowledge_base.md's internal structure).
+    if _META_SYSTEM_RE.search(resolved_query):
+        if tool_trace is not None:
+            tool_trace.append("meta_refusal")
+        return _RouteResult(done=True, answer=META_REFUSAL_MESSAGE, chunks=None)
+
     sqlite_conn = get_sqlite_conn()
     route = classify_query(resolved_query, sqlite_conn)
     if conversation_state is not None:
@@ -635,7 +649,7 @@ def _route_and_retrieve(
     if (chunks is None and "search_knowledge_base" not in tool_names_fired
             and (_HEALTH_JUDGMENT_RE.search(resolved_query) or _COMPOUND_CLAUSE_RE.search(resolved_query)
                  or _HEALTH_CONDITION_RE.search(resolved_query) or _REGULATORY_LIMIT_RE.search(resolved_query)
-                 or _CLAIM_ELIGIBILITY_RE.search(resolved_query))):
+                 or _CLAIM_ELIGIBILITY_RE.search(resolved_query) or _QUANTITY_CALC_RE.search(resolved_query))):
         product_ins_codes = get_product_ins_codes(effective_product_id, sqlite_conn) if effective_product_id else None
         health_chunks = retrieve_hybrid_with_retry(
             resolved_query, product_ins_codes=product_ins_codes, top_k=top_k,

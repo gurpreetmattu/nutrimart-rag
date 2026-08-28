@@ -84,6 +84,22 @@ _VALUE_JUDGMENT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Bare "what is/are X" definitional question with NO anaphoric reference to
+# the active product ("this"/"it"/etc — those are still genuinely about the
+# product, e.g. "what is this ingredient"). Confirmed real, live
+# (2026-08-28): with Britannia Brown Bread active, "what is maida?" got
+# rewritten to "For Britannia Brown Bread: what is maida?" — same root
+# cause the module docstring above already documents for the value-judgment
+# case (product-name-heavy phrasing drags the cross-encoder toward that
+# product's own ingredient/additive chunks), just never extended to this
+# second, unconditional prepend branch. Live result: retrieval returned
+# Brown Bread's own INS-coded additive chunks (Ammonium Chloride, DATEM,
+# Calcium Propionate) instead of ingredient_kb_tier2.md's actual "Refined
+# wheat flour (maida)" entry, and the answer wrongly claimed maida "isn't
+# defined" in the retrieved context — a real KB entry existed the whole
+# time, generic-definition retrieval just never reached it.
+_BARE_DEFINITIONAL_RE = re.compile(r"^\s*what\s+(?:is|are)\s+(?:a|an|the)?\s*\S", re.IGNORECASE)
+
 
 def _attribute_label(attribute: str) -> str:
     label, _unit = NUTRITION_LABELS.get(attribute, (attribute.replace("_g", "").replace("_mg", "").replace("_", " "), ""))
@@ -179,6 +195,18 @@ def resolve_followup(query: str, state: dict) -> str:
         return f"Is {fact['value']}{fact['unit']} of {label} a lot? {query}"
 
     if product_id and product_name and product_name.lower() not in query.lower():
+        # A bare "what is X" definitional question with no anaphora and no
+        # recognized product-fact-field match is asking what something IS
+        # in general, not about this specific product's own data — leave it
+        # unresolved (see _BARE_DEFINITIONAL_RE's docstring above) rather
+        # than dragging retrieval toward the active product's own chunks.
+        # effective_product_id still falls back to conversation_state
+        # downstream if the tool-calling loop genuinely needs it (e.g. it
+        # decides to also check whether THIS product contains that
+        # ingredient) — only the QUERY TEXT is left product-name-free here.
+        if (_BARE_DEFINITIONAL_RE.match(query) and not _ANAPHORA_RE.search(query)
+                and _match_fact_field(query) is None):
+            return query
         return f"For {product_name}: {query}"
 
     return query
