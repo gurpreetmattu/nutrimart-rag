@@ -21,12 +21,17 @@ needs, not a general security framework:
   a motivated attacker); see detect_prompt_injection()'s docstring for
   what it actually catches and why it flags rather than hard-blocks.
 
-Explicitly NOT built here, and why: authentication (no user accounts, no
-PII, no per-user data in this app — there's nothing to authenticate access
-*to*); CORS configuration (no CORSMiddleware is registered in main.py,
-which is the secure default — browsers already block cross-origin fetches
-without it, so adding a permissive CORS policy would be a regression, not
-a hardening). Both are deliberate scope decisions, not oversights.
+Written before user accounts existed — that part of this file's original
+scope note is now stale. Authentication/authorization is real now
+(api/auth.py: JWT-in-httpOnly-cookie, bcrypt-hashed passwords in Postgres,
+`get_current_user` gating checkout/orders/cart/profile) and lives in its
+own module rather than here, since it's a different concern (identity,
+not request-volume/input-shape guardrails). What's still explicitly NOT
+built, and why: CORS configuration (no CORSMiddleware is registered in
+main.py, which is the secure default — browsers already block cross-
+origin fetches without it, so adding a permissive CORS policy would be a
+regression, not a hardening) — a deliberate scope decision, not an
+oversight.
 """
 import re
 import time

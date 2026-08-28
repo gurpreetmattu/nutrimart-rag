@@ -6,10 +6,16 @@ httpOnly cookie can't be read by injected/malicious JS, where localStorage
 can. The frontend never sees or handles the raw token; it just sends
 credentials: "include" and the browser does the rest.
 
-No refresh-token rotation, no email verification, no OAuth providers —
-deliberately out of scope for this project (see CLAUDE.md-adjacent
-discussion). A single short-lived (7-day) access token is the whole
-mechanism; logout just clears the cookie, and there's no server-side
+No refresh-token rotation, no email verification, no OAuth providers, no
+password-reset flow — deliberately out of scope for this project (see
+CLAUDE.md-adjacent discussion). A password-reset-by-email flow was built
+and fully verified in an earlier session (token generation/expiry/single-
+use, a Resend-backed email, the works) but deliberately removed again: it
+only ever delivers to the email address the project's own Resend account
+is registered under, not any other real user's inbox, without paying for
+and verifying a domain — a real product gap for an unpaid portfolio demo,
+not worth carrying. A single short-lived (7-day) access token is the
+whole mechanism; logout just clears the cookie, and there's no server-side
 blocklist since the token's own expiry bounds exposure.
 """
 import os

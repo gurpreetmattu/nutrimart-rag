@@ -25,10 +25,14 @@ export function nutritionUnit(key) {
   return m ? m[1] : "";
 }
 
-// This app has no real commerce backend or pricing data — these are
+// There's a real checkout/order-history backend now (api/orders.py), but
+// the prices themselves are still not real market data — these are
 // deterministic, cosmetic numbers (seeded from product_id) purely so the
 // UI reads like a real quick-commerce listing. Ingredients/nutrition/
 // allergen data shown elsewhere is real; price and delivery time are not.
+// structured/pricing.py ports this exact algorithm to Python so checkout
+// charges the same price the UI displays, rather than trusting a
+// client-submitted number.
 //
 // Price is derived from category + pack_size (not just a product_id hash,
 // which produced nonsense like a 1000g curd costing less than a 150g

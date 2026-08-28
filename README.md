@@ -122,10 +122,22 @@ Then deploy the container:
 5. **Container**: port `8080` (Cloud Run's `$PORT` — the `Dockerfile`'s
    `CMD` already reads `$PORT`, no change needed), **memory: 1 GiB**,
    **1 CPU**. 1 GiB is the number that matters most — see the note below.
-6. **Environment variables**: paste every var from your `.env`
-   (`GROQ_API_KEY*`, `HF_TOKEN`, `QDRANT_URL`, `QDRANT_API_KEY`, optional
-   `LANGFUSE_*`) into the service's Variables tab — one name/value pair
-   per row, the Console has no bulk `.env`-file paste.
+6. **Environment variables**: paste every var from your `.env` into the
+   service's Variables tab — one name/value pair per row, the Console has
+   no bulk `.env`-file paste. As of the account-system additions, that's
+   more than just the RAG-pipeline vars:
+   - `GROQ_API_KEY*`, `HF_TOKEN`, `QDRANT_URL`, `QDRANT_API_KEY`, optional
+     `LANGFUSE_*` — the original RAG-pipeline set.
+   - `JWT_SECRET_KEY` — required; generate a real one (`python -c
+     "import secrets; print(secrets.token_hex(32))"`), never the source's
+     dev-only fallback.
+   - `DATABASE_URL` — required; a managed Postgres instance (e.g.
+     Supabase's free tier, **pooled "Transaction" mode, port 6543** — see
+     `.env.example`'s own comment for why a scale-to-zero host needs the
+     pooler specifically, not the direct connection).
+   Prefer Cloud Run's **Secrets** integration over plain env vars for
+   `DATABASE_URL`/`JWT_SECRET_KEY` specifically — they're real
+   credentials, not deploy-target config.
 7. **Execution environment**: Second generation (needed for the full
    Linux syscall surface `torch`/`sentence-transformers` use).
 8. Deploy. Traffic auto-routes to the newest revision by default.
