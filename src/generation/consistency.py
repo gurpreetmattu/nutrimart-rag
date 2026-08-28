@@ -115,7 +115,10 @@ def _attribute_positions(lower_text: str, attribute: str) -> list[int]:
     return positions
 
 
-def _nearby_same_unit_numbers(block_text: str, positions: list[int], unit_suffix: str) -> set[str]:
+def _nearby_same_unit_numbers(
+    block_text: str, positions: list[int], unit_suffix: str,
+    attribute: str | None = None, other_positions: dict[str, list[int]] | None = None,
+) -> set[str]:
     """
     Only pulls numbers physically near an attribute-word mention, not every
     number sharing that unit anywhere in the block. Confirmed real false
@@ -125,6 +128,19 @@ def _nearby_same_unit_numbers(block_text: str, positions: list[int], unit_suffix
     values together (fat, protein, carbs, sugar all share unit "g") made
     every one of those attributes' checks see every other attribute's
     number as a "contradicting" value for itself.
+
+    `attribute`/`other_positions` (added 2026-08-28, real false positive):
+    the proximity window alone isn't enough when TWO attributes sharing a
+    unit are mentioned close together in the same sentence — "the low
+    total fat (1.5 g) and zero trans fat contribute to..." flagged 1.5g as
+    contradicting trans_fat_g=0g purely because "1.5 g" sits within 60
+    chars of the word "trans fat", even though it's textually attached to
+    "total fat" right next to it. Fixed with a nearest-attribute check: if
+    some OTHER attribute (of the same unit) has a mention strictly closer
+    to this number than the current attribute's own closest mention, the
+    number more plausibly belongs to that other attribute's claim and is
+    excluded here. Optional/defaulted so any other caller of this function
+    (none currently exist, but kept narrow) doesn't need updating.
     """
     found = set()
     for m in _NUMERIC_TOKEN_RE.finditer(block_text):
@@ -183,16 +199,42 @@ def _nearby_same_unit_numbers(block_text: str, positions: list[int], unit_suffix
             r"should\s+not\s+exceed|upper\s+limit|daily\s+limit)\s*[:\(]?\s*$", head,
         ):
             continue
-        if any(abs(m.start() - p) <= _PROXIMITY_WINDOW for p in positions):
-            found.add(token)
+        if not any(abs(m.start() - p) <= _PROXIMITY_WINDOW for p in positions):
+            continue
+
+        # Nearest-attribute check — see this function's docstring above.
+        if attribute is not None and other_positions:
+            current_dist = min(abs(m.start() - p) for p in positions)
+            closer_elsewhere = any(
+                abs(m.start() - p) < current_dist
+                for other_attr, other_pos in other_positions.items()
+                if other_attr != attribute
+                for p in other_pos
+            )
+            if closer_elsewhere:
+                continue
+
+        found.add(token)
     return found
 
 
 def _find_contradiction(block_text: str, known_facts: dict) -> str | None:
     lower = block_text.lower()
 
+    # Computed once per block, shared across every attribute's check below,
+    # so each attribute's own _nearby_same_unit_numbers() call can tell
+    # whether a candidate number sits closer to a DIFFERENT attribute's
+    # mention (see that function's docstring for the real bug this fixes).
+    # Built from the FULL _ATTRIBUTE_WORDS vocabulary, not just
+    # known_facts — a sibling attribute (e.g. total_fat_g) still needs to
+    # "claim" a nearby number even when it isn't itself a currently-known
+    # fact this conversation (e.g. the product's known_facts so far only
+    # has trans_fat_g established), otherwise there's nothing to compare
+    # against and the false positive isn't actually prevented.
+    all_positions = {attr: _attribute_positions(lower, attr) for attr in _ATTRIBUTE_WORDS}
+
     for attribute, fact in known_facts.items():
-        positions = _attribute_positions(lower, attribute)
+        positions = all_positions[attribute]
         if not positions:
             continue
 
@@ -216,7 +258,9 @@ def _find_contradiction(block_text: str, known_facts: dict) -> str | None:
             continue
 
         unit_suffix = fact["unit"].lower()
-        same_unit_numbers = _nearby_same_unit_numbers(block_text, positions, unit_suffix)
+        same_unit_numbers = _nearby_same_unit_numbers(
+            block_text, positions, unit_suffix, attribute=attribute, other_positions=all_positions,
+        )
         if not same_unit_numbers:
             continue
 

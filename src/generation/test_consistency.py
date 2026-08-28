@@ -96,6 +96,36 @@ forgotten_fact_answer = "[FACT] The retrieved data does not specify the added su
 check("a genuine 'forgotten fact' case still gets flagged",
       "CONTRADICTS" in check_conversation_consistency(forgotten_fact_answer, state))
 
+# --- Sibling-attribute false positive (2026-08-28, live report) -----------
+# "the low total fat (1.5 g) and zero trans fat contribute to..." flagged
+# 1.5g as contradicting trans_fat_g=0g purely because it sits within the
+# proximity window of the word "trans fat", even though it's textually
+# attached to "total fat" right next to it.
+
+sibling_answer = ("[FACT] The low total fat (1.5 g) and zero trans fat contribute to a modest "
+                   "calorie profile of 246 kcal.")
+check("a number tightly attached to a SIBLING attribute (total fat) does not "
+      "false-positive against a different attribute (trans fat) mentioned nearby",
+      "CONTRADICTS" not in check_conversation_consistency(sibling_answer, _state("trans_fat_g", 0.0)))
+
+# The sibling fix must not blind total_fat_g to its OWN correct value in the
+# same sentence.
+check("the sibling fix doesn't blind total_fat_g to its own correct value in the same sentence",
+      "CONTRADICTS" not in check_conversation_consistency(sibling_answer, _state("total_fat_g", 1.5)))
+
+# A genuinely WRONG total_fat_g value in the same sentence shape must still
+# be caught — the sibling fix must not over-correct into silence.
+wrong_sibling_answer = ("[FACT] The low total fat (3.0 g) and zero trans fat contribute to a modest "
+                         "calorie profile of 246 kcal.")
+check("a genuine wrong value for total_fat_g in the same sentence shape still gets flagged",
+      "CONTRADICTS" in check_conversation_consistency(wrong_sibling_answer, _state("total_fat_g", 1.5)))
+
+# A genuine contradiction for trans_fat_g itself (not a sibling mix-up) must
+# still be caught.
+trans_fat_wrong_answer = "[FACT] This product has 2.0 g of trans fat."
+check("a genuine wrong value for trans_fat_g itself still gets flagged",
+      "CONTRADICTS" in check_conversation_consistency(trans_fat_wrong_answer, _state("trans_fat_g", 0.0)))
+
 # --- No known_facts at all: always a no-op ---------------------------------
 
 check("no known_facts means the answer passes through completely unchanged",
