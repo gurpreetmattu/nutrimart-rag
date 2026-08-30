@@ -184,6 +184,20 @@ REGULATORY_OVERRIDE_TERMS = [
     # entry stops the router's OWN fast path from bypassing that loop
     # entirely, same two-layer shape as every other entry in this list.
     "allergic",
+    # Snack-choice/eating-plan phrasing (confirmed real, live, 2026-08-30,
+    # found while testing ask_langchain_hybrid.py's always-synthesize
+    # refactor): "is this a smart snack choice for someone cutting
+    # calories?" and "does this fit into a low-calorie eating plan?" both
+    # matched NUTRITION_FIELD_PATTERNS' "calorie"/"calories" keyword with no
+    # override term present, so they fast-pathed straight to a bare
+    # energy_kcal number before EITHER the tool-calling loop or its
+    # downstream generation fix (which specifically handles this shape) ever
+    # saw the query — the exact same two-layer router+tool-loop bug shape as
+    # "claim"/"good source of"/"-free" above, just two more phrasings this
+    # list hadn't caught yet.
+    "smart snack", "snack choice", "smart choice", "healthy choice",
+    "eating plan", "diet plan", "cutting calories", "low-calorie", "low calorie",
+    "fit into my diet", "fits into my diet", "fit into a", "fits into a",
 ]
 
 # General structural override (added 2026-08-21 audit) — replaces the

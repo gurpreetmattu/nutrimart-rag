@@ -161,11 +161,22 @@ system prompt instructs it to call a structured tool **and**
 product's own data and general regulatory/nutrition context (e.g. "is this
 healthy?", "why does this need a preservative?").
 
-If only structured tool(s) fire, their already-cited output returns
-directly — no second LLM call. This generalizes the fact-lookup route's
-"instant, zero-LLM-cost" property to the full structured-data surface
-(comparisons, ingredient/allergen checks) instead of needing its own
-keyword pattern for each case.
+**Updated 2026-08-30 (always-synthesize refactor):** every structured-only
+turn now always goes through a second, real generation call
+(`generate_answer_lc()`, `verdict_mode=True`) instead of returning the raw
+tool string directly. The prior "no second LLM call" instant path was
+found to be the root cause of a whole recurring bug class: a regex
+vocabulary list decided whether a question was "evaluative enough" to
+deserve real reasoning, and any real phrasing not on that list (a new
+health-judgment wording, a dietary question, a claim-eligibility question
+nobody had written a pattern for yet) fell through to a literal, unreasoned
+fact dump instead of an actual answer. Removing that gate — letting the
+LLM always reason over the real structured data it's handed, never
+inventing anything beyond it — closed that whole class at once rather than
+requiring one more regex entry per new phrasing. The only route that
+keeps the true zero-LLM-call "instant" property is `classify_query()`'s
+own deterministic SQL fast path (§3.1) — a single unambiguous fact lookup
+with no judgment involved.
 
 **LLM tool-selection has an irreducible error rate** — this is treated as a
 property of the architecture, not a bug to chase to zero with more prompt
@@ -180,6 +191,19 @@ list of exact phrases. Four such detectors exist, covering health
 judgments, regulatory limits, claim eligibility, and dietary/nutritional
 verdicts — each was found via either a live user report or a proactive
 synthetic stress-test batch, and each is verified with regression tests.
+Since the always-synthesize refactor, these detectors' only remaining job
+is deciding whether to ALSO pull in KB retrieval alongside a structured
+tool's data — they no longer gate whether generation happens at all.
+
+`classify_query()`'s own deterministic fast path (§3.1) has the same
+"regex vocabulary decides too much" shape at a layer *before* the LLM
+tool-router even runs, and needs the same category of fix whenever a new
+gap surfaces there (e.g. a question that mentions a nutrition-field word
+but is actually evaluative) — it's a smaller, shallower version of the
+same risk, not eliminated, and is a separate override-term list from the
+four detectors above by necessity (importing them here would pull the
+naive baseline's dependency-light fast path into the full hybrid stack's
+import graph).
 
 ---
 
@@ -293,6 +317,28 @@ actually needs.
 `conversation/state.py` tracks `known_facts` (attribute → value/unit/source,
 established across turns), the active product, and the active topic. Two
 checks build on this:
+
+**Added 2026-08-30:** `conversation/state.py` also tracks a bounded
+`recent_turns` list (the last 3 real `(user_text, assistant_text)` pairs),
+threaded into the generation prompt as actual prior chat messages, not
+just flattened into `known_facts`. This is a distinct fix from the
+always-synthesize refactor above and was needed for a different reason:
+generation previously had zero memory of what it had actually *said*
+last turn (only the numeric facts it had established), so an explicit
+"do not repeat the previous information" instruction had nothing to check
+against. Bounded (not the full conversation) to keep prompt growth
+predictable; resets whenever the active product changes, for the same
+cross-product-contradiction reason `known_facts` already resets.
+
+Separately, `hybrid_core.py::_is_gibberish()` and `_META_SYSTEM_RE` reject
+low-quality or adversarial input *before* routing/the tool loop even run:
+pure-noise input (empty/whitespace, no letters at all, a single character
+or case-alternating pair held down, a random low-vowel-ratio keyboard
+mash) and jailbreak/implementation-probing questions, respectively. These
+exist because `tool_choice="required"` forces the router to commit to
+SOME tool on every turn — without a pre-check, garbage input still got
+answered as if it were a real question about whatever product was in
+context.
 
 - **Consistency check** (`generation/consistency.py`) — catches a freshly
   generated answer contradicting an already-established fact (a genuine

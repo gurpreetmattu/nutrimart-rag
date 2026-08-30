@@ -242,6 +242,84 @@ META_REFUSAL_MESSAGE = (
     "files — I'm happy to help with product, ingredient, nutrition, or food-safety questions instead."
 )
 
+# Gibberish/no-content input guard (real bug, 2026-08-29): sending mashed
+# digits/keys (e.g. "3333333333333333333333") still reached the
+# tool-calling loop, which is forced to call SOME tool (tool_choice=
+# "required") and — with a product already in context from earlier in the
+# conversation — quietly answered as if the noise were a real question
+# about that product, instead of asking the user to rephrase. Deliberately
+# narrow and conservative so it can never misfire on a real question:
+# no-letters-at-all input (pure digits/punctuation/whitespace), OR a single
+# character held down/repeated (e.g. "nnnnnnnnn", "kkkkk") — a real
+# gap found live 2026-08-30, since the original pattern only checked for
+# an ABSENCE of letters and a repeated-letter mash has plenty of letters,
+# just no actual words. A broader "keyboard mash" detector (e.g.
+# "asdasdasd", multiple distinct keys) would need a dictionary/entropy
+# check and risks false positives on genuine short queries, so it's out of
+# scope here — this only catches the same-character-held-down shape.
+# IGNORECASE (added same day, real gap): "NnNnNnNn" (shift key mashed
+# alongside the letter) is the same character each time if you ignore
+# case, but a case-SENSITIVE backreference treats "N" and "n" as different
+# characters and doesn't match — confirmed real, took 35s and produced an
+# unrelated full nutrition dump before this fix.
+#
+# Rewritten as a plain function, not a regex (2026-08-31, two more real
+# bugs found live): (1) a legitimate Hindi question ("यह सुरक्षित है
+# क्या?" — "is this safe?") got wrongly refused as gibberish — the
+# ASCII-only `[^a-zA-Z]` class treats Devanagari (and Arabic, CJK, every
+# non-Latin script) as "no letters at all", which would refuse every
+# non-English user; Python's stdlib `re` has no Unicode letter-property
+# escape to fix this while staying a regex, so `str.isalpha()` (correctly
+# Unicode-aware) replaces it here. (2) a single space (passes Pydantic's
+# `min_length=1` but strips to "") matched NEITHER regex alternative
+# (both required >=1 char), fell through as a "real" query, and caused a
+# 60s timeout — now handled as an explicit empty-after-strip check.
+_VOWELS = set("aeiouAEIOU")
+# Below this vowel-to-letter ratio, real English/Latin-script text
+# essentially never occurs — a genuine word or short sentence keeps a
+# vowel ratio well above 0.2 even for consonant-heavy strings ("Kurkure"
+# is 3/7≈0.43, "PGPR" alone is 0/4 but too short to reach the length gate
+# below). Deliberately conservative (real false-negative risk kept low
+# over catching every possible mash) since this is a hard gate that
+# refuses the query outright.
+_LOW_VOWEL_RATIO = 0.12
+# Below this many letters, a low vowel ratio is not a reliable signal at
+# all (a short real technical term like "PGPR" or "INS" has zero vowels
+# and must NOT be refused) — only apply the ratio check once there's
+# enough length for it to mean something.
+_MIN_LETTERS_FOR_VOWEL_CHECK = 8
+
+
+def _is_gibberish(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return True
+    if not any(ch.isalpha() for ch in stripped):
+        return True
+    first = stripped[0].lower()
+    if len(stripped) >= 3 and all(ch.lower() == first for ch in stripped):
+        return True
+    # Random keyboard-mash detector (added 2026-08-31, two real live
+    # examples: "lmnlkyfyycudr6", "ytdckgyjvf vy" — both got answered with
+    # an unrelated full nutrition dump instead of being recognized as
+    # noise). Deliberately Latin-script-only: a script without Latin
+    # vowels (Hindi, Chinese, Arabic — see the non-Latin fix above) would
+    # false-positive on a vowel-ratio check that assumes a/e/i/o/u are the
+    # vowels, so this only runs when every letter in the input is ASCII.
+    letters = [ch for ch in stripped if ch.isalpha()]
+    if (letters and len(letters) >= _MIN_LETTERS_FOR_VOWEL_CHECK
+            and all(ord(ch) < 128 for ch in letters)):
+        vowel_ratio = sum(1 for ch in letters if ch in _VOWELS) / len(letters)
+        if vowel_ratio < _LOW_VOWEL_RATIO:
+            return True
+    return False
+
+
+GIBBERISH_MESSAGE = (
+    "[UNCERTAIN] I didn't understand that as a question — could you rephrase it? I can help with "
+    "product ingredients, nutrition, allergens, or food safety."
+)
+
 
 def _fuzzy_verdict_trigger(query: str) -> bool:
     for token in re.findall(r"[a-zA-Z]+", query.lower()):
@@ -272,9 +350,22 @@ def _direct_ingredient_allergen_context(product_id: str, conn) -> str | None:
 # Dietary-classification verdict questions ("is this vegan", "is this
 # vegetarian", "is this dairy-free/gluten-free", "suitable for vegans") —
 # see Finding 40's 2026-08-26 writeup (the vegan bug).
+# Broadened again (2026-08-29, real bug): "does this have any dairy
+# derivatives?" on a curd product came back "'dairy derivatives' was not
+# found among declared ingredients or allergens" — check_ingredient_or_
+# allergen's fuzzy match compares the literal string "dairy derivatives"
+# against declared ingredient/allergen names like "milk solids", which
+# never scores a close-enough match, so the tool reports a false negative
+# on a product that IS dairy. Same shape as the vegan bug: a broad
+# CATEGORY question (dairy/nut/soy/egg, as a category, not one specific
+# named ingredient) needs the real declared data reasoned over, not a
+# literal fuzzy-match lookup — so it goes through the same
+# _direct_ingredient_allergen_context() verdict-synthesis path.
 _DIETARY_CLASSIFICATION_RE = re.compile(
     r"\bvegans?\b|\bvegetarians?\b|\bplant[- ]based\b|\bdairy[- ]free\b|\bgluten[- ]free\b"
-    r"|\bcontains?\s+animal\b|\banimal[- ]derived\b|\banimal\s+products?\b",
+    r"|\bcontains?\s+animal\b|\banimal[- ]derived\b|\banimal\s+products?\b"
+    r"|\bdairy\s+(?:derivatives?|products?)\b|\bcontains?\s+dairy\b"
+    r"|\b(?:nut|soy|egg|milk)\s+derivatives?\b",
     re.IGNORECASE,
 )
 

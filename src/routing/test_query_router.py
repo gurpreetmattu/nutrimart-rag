@@ -97,6 +97,16 @@ must_defer("can Cadbury Dairy Milk Chocolate Bar cause an allergic reaction?", "
 must_defer("if I eat 3 packets of Kurkure Masala Munch how much sodium is that", "quantity-multiplier phrasing")
 must_defer("how many packets of Parle-G equal 2000 calories", "quantity-multiplier phrasing")
 
+# Snack-choice/eating-plan phrasing (2026-08-30, live report): matched the
+# "calorie"/"calories" NUTRITION_FIELD_PATTERNS keyword with no override
+# term present, fast-pathing to a bare energy_kcal number before the
+# question's actual evaluative shape (is this a good choice for a goal) was
+# ever considered.
+must_defer("is Lay's Classic Salted Crunchy Potato Chips a smart snack choice for someone cutting calories?",
+           "snack-choice phrasing")
+must_defer("does Lay's Classic Salted Crunchy Potato Chips fit into a low-calorie eating plan?",
+           "eating-plan phrasing")
+
 # --- Regression guard: plain fact lookups must still fast-path -------------
 # (verifies the override-term additions above didn't over-broaden into
 # deferring ordinary questions — "cholesterol" bare was tried and reverted

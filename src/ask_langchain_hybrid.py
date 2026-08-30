@@ -52,6 +52,24 @@ This file imports and reuses hybrid_core.py's shared logic directly
 RERANK_SCORE_THRESHOLD, INSUFFICIENT_EVIDENCE_MESSAGE) rather than
 copy-pasting them, so a future fix to that shared logic can't silently
 diverge from what this pipeline actually runs.
+
+Always-synthesize refactor (2026-08-30) — the dominant recurring bug
+pattern across this whole file's history was a hand-written regex
+vocabulary list deciding WHETHER a structured-tool answer got real LLM
+reasoning at all; any real phrasing not on that list fell through to a
+literal, unreasoned dump. `_route_and_retrieve()` now always synthesizes a
+structured-only answer through generate_answer_lc() (verdict_mode=True)
+instead of gating that decision behind _HEALTH_JUDGMENT_RE/
+_DIETARY_CLASSIFICATION_RE/etc. — those regexes keep their separate,
+legitimate job of deciding whether to ALSO pull in KB retrieval, but no
+longer gate generation itself. Paired with real bounded conversation
+history (conversation/state.py::record_turn(), threaded into
+_build_generate_messages() as prior chat turns) so the model has actual
+memory of what it said last turn — this is what makes "do not repeat the
+previous information" work, not the synthesis change alone. See
+hybrid_core.py's own module docstring and _is_gibberish() for the
+companion pre-LLM input-quality guards (jailbreak/meta-question refusal,
+pure-noise/keyboard-mash refusal) added the same week.
 """
 import json
 import os
@@ -69,7 +87,6 @@ from groq import RateLimitError as GroqRateLimitError, BadRequestError as GroqBa
 from langchain_community.cache import SQLiteCache
 from langchain_core.globals import set_llm_cache
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from sentence_transformers import SentenceTransformer
@@ -90,19 +107,18 @@ from generation.token_budget import (
     DAILY_TOKEN_LIMIT, estimate_request_tokens, has_budget, record_actual_usage,
 )
 from conversation.resolve import resolve_followup
-from conversation.state import record_fact, set_active_topic
+from conversation.state import record_fact, set_active_topic, record_turn
 from agent.tools import TOOL_SCHEMAS, STRUCTURED_TOOL_NAMES, dispatch_structured_tool, NO_PRODUCT_CONTEXT_MESSAGE
 from timing import timed
 
 # Reused directly from hybrid_core.py (not duplicated) — see that module's
 # docstring for the retrieval-decision logic this pipeline depends on.
 from hybrid_core import (
-    retrieve_hybrid_with_retry, _TOOL_TOPIC, _HEALTH_JUDGMENT_RE, _COMPOSITION_VERDICT_RE,
-    _REGULATORY_LIMIT_RE, _CLAIM_ELIGIBILITY_RE, _DIETARY_CLASSIFICATION_RE,
-    _NUTRITIONAL_VERDICT_RE, _fuzzy_verdict_trigger, _direct_ingredient_allergen_context,
+    retrieve_hybrid_with_retry, _TOOL_TOPIC, _HEALTH_JUDGMENT_RE,
+    _REGULATORY_LIMIT_RE, _CLAIM_ELIGIBILITY_RE, _direct_ingredient_allergen_context,
     _build_agent_context_block, _sync_product_into_state,
     AGENT_SYSTEM_PROMPT_TEMPLATE, INSUFFICIENT_EVIDENCE_MESSAGE,
-    _META_SYSTEM_RE, META_REFUSAL_MESSAGE,
+    _META_SYSTEM_RE, META_REFUSAL_MESSAGE, _is_gibberish, GIBBERISH_MESSAGE,
 )
 
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
@@ -339,15 +355,23 @@ def build_resources() -> dict:
     }
 
 
-GENERATE_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", SYSTEM_PROMPT),
-    ("human", "{user_message}"),
-])
-
-
 def _build_generate_messages(query: str, chunks: list[dict], known_facts: dict | None,
-                              structured_context: str | None) -> list:
-    """Shared prompt-building for generate_answer_lc()/generate_answer_lc_stream()."""
+                              structured_context: str | None, recent_turns: list[tuple[str, str]] | None = None) -> list:
+    """
+    Shared prompt-building for generate_answer_lc()/generate_answer_lc_stream().
+
+    `recent_turns`, if given, is a bounded list of (user_text, assistant_text)
+    pairs from earlier THIS conversation (see conversation/state.py's
+    RECENT_TURNS_LIMIT) — threaded in as real prior HumanMessage/AIMessage
+    turns before the current question, exactly the way any normal chat
+    model sees its own conversation history. Added 2026-08-30: before this,
+    generation only ever saw a flat known_facts dict of numeric values, with
+    zero memory of what it actually SAID last turn — which is why an
+    explicit "do not repeat the previous information" ask had nothing to
+    check against. Bounded (not the full conversation) to keep prompt
+    growth/token cost predictable in a long session — see
+    conversation/state.py::record_turn()'s docstring for the cap.
+    """
     context_block = build_context_block(chunks) if chunks else ""
 
     known_facts_section = ""
@@ -359,9 +383,32 @@ def _build_generate_messages(query: str, chunks: list[dict], known_facts: dict |
 
     structured_section = ""
     if structured_context:
+        # Real bug, 2026-08-30 (found live, post always-synthesize
+        # refactor): the original "do not ... re-derive a different answer
+        # for this" wording was written to stop the model from disputing a
+        # correct deterministic fact, but it was ALSO suppressing legitimate
+        # interpretation — a first-turn evaluative question ("is this a
+        # smart snack choice for cutting calories?") answered via
+        # lookup_product_fact alone came back as a bare restated fact with
+        # zero judgment, because the model read "do not re-derive a
+        # different answer" as "this fact IS the complete answer." The fix
+        # is explicit: these numbers/facts are fixed and must not be
+        # changed, but the user's actual question (an evaluation, a
+        # comparison, a "should I") still needs to be answered by reasoning
+        # ON TOP of them, not by just restating them.
         structured_section = (
-            f"Already answered this turn by a direct data lookup (ground truth — do not "
-            f"contradict, hedge against, or re-derive a different answer for this):\n"
+            f"Already answered this turn by a direct data lookup — these specific numbers/facts are "
+            f"ground truth and must not be changed, contradicted, or restated with a different value. "
+            f"But they are not automatically the complete answer: if the user's question asks for a "
+            f"judgment, comparison, or evaluation (e.g. \"is this good for X\", \"is this a lot\"), you "
+            f"must still reason over these facts to actually answer that question, tagged [INTERPRETATION] "
+            f"as usual — do not just restate the fact and stop.\n"
+            f"When no retrieved context is available to compare against (no chunks below), you may still "
+            f"use ordinary numeracy/common knowledge to characterize one of these numbers — e.g. whether a "
+            f"given calorie count is typical or high for a snack-sized serving, or whether a gram amount is "
+            f"a small or large share of a day's intake — tagged [INTERPRETATION]. This is different from "
+            f"inventing a missing data point (still forbidden): you are reasoning ABOUT a real number you "
+            f"already have, not filling in one you don't.\n"
             f"{structured_context}\n\n---\n\n"
         )
 
@@ -373,11 +420,17 @@ def _build_generate_messages(query: str, chunks: list[dict], known_facts: dict |
 
 User question: {query}"""
 
-    return GENERATE_PROMPT.invoke({"user_message": user_message}).to_messages()
+    messages = [SystemMessage(content=SYSTEM_PROMPT)]
+    for user_text, assistant_text in (recent_turns or []):
+        messages.append(HumanMessage(content=user_text))
+        messages.append(AIMessage(content=assistant_text))
+    messages.append(HumanMessage(content=user_message))
+    return messages
 
 
 def generate_answer_lc(query: str, chunks: list[dict], known_facts: dict | None = None,
-                        structured_context: str | None = None, usage_out: list | None = None) -> str:
+                        structured_context: str | None = None, usage_out: list | None = None,
+                        recent_turns: list[tuple[str, str]] | None = None) -> str:
     """
     LCEL-prompt-built replacement for generation/llm.py::generate_answer()
     — same SYSTEM_PROMPT/typed-claim contract and the same
@@ -386,8 +439,10 @@ def generate_answer_lc(query: str, chunks: list[dict], known_facts: dict | None 
     rotation/budget/HF-fallback parity with gateway.complete()) instead of
     calling it directly. This is the "final generation" LangChain-native
     call point described in the module docstring.
+
+    `recent_turns` — see _build_generate_messages()'s docstring.
     """
-    messages = _build_generate_messages(query, chunks, known_facts, structured_context)
+    messages = _build_generate_messages(query, chunks, known_facts, structured_context, recent_turns=recent_turns)
     response = groq_gateway_invoke(messages, max_tokens=2048, call_name="generate_answer", usage_out=usage_out)
     return response.content
 
@@ -468,9 +523,10 @@ def groq_gateway_stream(messages: list, max_tokens: int, call_name: str = "strea
 
 
 def generate_answer_lc_stream(query: str, chunks: list[dict], known_facts: dict | None = None,
-                               structured_context: str | None = None, usage_out: list | None = None):
+                               structured_context: str | None = None, usage_out: list | None = None,
+                               recent_turns: list[tuple[str, str]] | None = None):
     """Streaming counterpart to generate_answer_lc() — yields text chunks instead of returning a full string."""
-    messages = _build_generate_messages(query, chunks, known_facts, structured_context)
+    messages = _build_generate_messages(query, chunks, known_facts, structured_context, recent_turns=recent_turns)
     yield from groq_gateway_stream(messages, max_tokens=2048, call_name="generate_answer", usage_out=usage_out)
 
 
@@ -520,6 +576,20 @@ def _route_and_retrieve(
     opening/closing the sqlite connection for its own lifetime — callers
     never see it.
     """
+    # Checked on the RAW query, before resolve_followup() runs — real bug,
+    # 2026-08-29: resolve_followup() prepends "For {product_name}: ..." (or
+    # similar) whenever a product is already in context, which is exactly
+    # the situation the reported bug happened in — that prepended text has
+    # real letters in it, so checking the RESOLVED query let mashed-digit
+    # input slip past this guard every time a product was already active.
+    # See _is_gibberish()'s docstring in hybrid_core.py for the underlying
+    # bug (tool_choice="required" forces SOME tool call regardless of input
+    # quality, so noise input got quietly answered as a real question).
+    if _is_gibberish(query):
+        if tool_trace is not None:
+            tool_trace.append("gibberish_refusal")
+        return _RouteResult(done=True, answer=GIBBERISH_MESSAGE, chunks=None)
+
     resolved_query = resolve_followup(query, conversation_state) if conversation_state is not None else query
 
     # Checked before classify_query()/the tool loop even run — a question
@@ -595,6 +665,12 @@ def _route_and_retrieve(
 
     structured_answers = []
     nutrition_fact_answers = []
+    # Subset of structured_answers that came specifically from
+    # check_ingredient_or_allergen — see the "always prefer real declared
+    # ingredient/allergen data" block below (2026-08-29 dairy-derivatives
+    # fix, generalized 2026-08-30) for why these get excluded from
+    # verdict-mode's "ground truth" context.
+    ingredient_check_answers = []
 
     for tc in tool_calls:
         name = tc["name"]
@@ -618,6 +694,8 @@ def _route_and_retrieve(
                 nutrition_fact_answers.append(result)
             else:
                 structured_answers.append(result)
+                if name == "check_ingredient_or_allergen":
+                    ingredient_check_answers.append(result)
             if name == "lookup_product_fact" and effective_product_id and conversation_state is not None:
                 field = args.get("field")
                 if field in NUTRITION_LABELS:
@@ -666,23 +744,41 @@ def _route_and_retrieve(
         if fired_topic:
             set_active_topic(conversation_state, fired_topic)
 
-    # The extended dietary/nutritional-verdict set drops the
-    # `chunks is None` requirement and directly fetches real
-    # ingredient/allergen data instead of trusting whichever tool fired —
-    # the tool-calling model sometimes also calls search_knowledge_base
-    # for these questions, which would otherwise silently gate this path
-    # out even though a real verdict is still needed.
-    _extended_verdict_match = (
-        _DIETARY_CLASSIFICATION_RE.search(resolved_query) or _NUTRITIONAL_VERDICT_RE.search(resolved_query)
-        or _fuzzy_verdict_trigger(resolved_query)
-    )
-    if _extended_verdict_match and effective_product_id:
+    # Whenever check_ingredient_or_allergen fired for a resolved product,
+    # always prefer real declared ingredient/allergen data over that tool's
+    # own literal fuzzy-match answer — see _direct_ingredient_allergen_
+    # context()'s docstring (Finding 40) and the 2026-08-29 dairy-
+    # derivatives false-negative fix this generalizes (curd: "'dairy
+    # derivatives' was not found among declared ingredients", despite milk
+    # solids being right there). No longer gated by a regex vocabulary
+    # match — see the always-synthesize refactor immediately below for why:
+    # the tool's own fuzzy match can be wrong for ANY category-style
+    # ingredient/allergen question, not just the words a hand-written list
+    # happened to cover, so this now always runs rather than only when a
+    # matched phrase triggered it.
+    if ingredient_check_answers and effective_product_id:
         direct_context = _direct_ingredient_allergen_context(effective_product_id, sqlite_conn)
-        if direct_context and direct_context not in structured_answers:
+        if direct_context:
+            structured_answers = [a for a in structured_answers if a not in ingredient_check_answers]
             structured_answers = structured_answers + [direct_context]
 
-    if ((structured_answers or nutrition_fact_answers)
-            and (_extended_verdict_match or (chunks is None and _COMPOSITION_VERDICT_RE.search(resolved_query)))):
+    # Always synthesize a structured-only answer through the LLM instead of
+    # ever returning a raw tool-string dump. Real bug, 2026-08-29 (and the
+    # dominant recurring pattern across this whole project's Findings
+    # history): gating synthesis behind a regex vocabulary match (_HEALTH_
+    # JUDGMENT_RE, _DIETARY_CLASSIFICATION_RE, etc.) meant any real
+    # phrasing not on that hand-written list fell straight through to a
+    # literal, unreasoned dump — e.g. "is this good for weight loss?"
+    # handing back the exact same bare "553kcal energy (per 100g)" fact the
+    # PRIOR turn already gave, zero synthesis. The LLM still only ever sees
+    # real product data / retrieved chunks here — this changes WHETHER it
+    # gets to reason over that data, not what data it's allowed to use, so
+    # grounding is unaffected; check_groundedness() already no-ops safely
+    # on non-KB (products.sqlite) citations. The regexes above (line ~670)
+    # keep their separate, legitimate job of deciding whether to ALSO pull
+    # in KB retrieval (search_knowledge_base) — a retrieval-adequacy
+    # decision, not a generation-gate decision — and are untouched here.
+    if chunks is None and (structured_answers or nutrition_fact_answers):
         structured_context = "\n\n".join(structured_answers + nutrition_fact_answers)
         verdict_known_facts = conversation_state.get("known_facts") if conversation_state is not None else None
         sqlite_conn.close()
@@ -690,11 +786,6 @@ def _route_and_retrieve(
             done=False, resolved_query=resolved_query, chunks=[], known_facts=verdict_known_facts,
             structured_context=structured_context, verdict_mode=True,
         )
-
-    if chunks is None and (structured_answers or nutrition_fact_answers):
-        answer = "\n\n".join(structured_answers + nutrition_fact_answers)
-        sqlite_conn.close()
-        return _RouteResult(done=True, answer=answer, chunks=None)
 
     if chunks is None:
         sqlite_conn.close()
@@ -786,24 +877,41 @@ def ask(
 
     result = _route_and_retrieve(query, top_k, verbose, resources, conversation_state, timing, usage, tool_trace)
     if result.done:
+        if conversation_state is not None:
+            record_turn(conversation_state, query, result.answer)
         if timing is not None:
             timing["total"] = time.perf_counter() - _start
         return _shape(result.answer, result.chunks, [], None)
 
+    recent_turns = conversation_state.get("recent_turns") if conversation_state is not None else None
     with timed(timing, "generation"):
         answer = generate_answer_lc(
             result.resolved_query, result.chunks, known_facts=result.known_facts,
-            structured_context=result.structured_context, usage_out=usage,
+            structured_context=result.structured_context, usage_out=usage, recent_turns=recent_turns,
         )
 
     if not result.verdict_mode:
         with timed(timing, "groundedness_check"):
             answer = check_groundedness(answer, result.chunks)
-        if result.structured_answers:
-            answer = "\n\n".join(result.structured_answers) + "\n\n" + answer
+        # No raw structured-answer prepend here — real bug found live,
+        # 2026-08-30 (post always-synthesize refactor): result.
+        # structured_answers already flows into generate_answer_lc() above
+        # via structured_context, so the LLM already weaves those facts
+        # into ONE synthesized answer. Prepending the raw tool string on top
+        # of that was pure duplication — worse, a turn that also fired
+        # search_knowledge_base could show the exact same raw ingredient
+        # dump the LLM had already paraphrased one turn earlier, defeating
+        # an explicit "don't repeat" ask (a real string-dedup mechanism
+        # existed for this before conversation-history threading landed;
+        # removed as redundant now that the model has real memory of what
+        # it said — see conversation/state.py::record_turn()). result.
+        # structured_answers itself is untouched (still returned via
+        # return_structured_answers for eval/ragas_metrics.py's grounding
+        # split) — only the user-visible raw prepend is removed.
 
     if conversation_state is not None:
         answer = check_conversation_consistency(answer, conversation_state)
+        record_turn(conversation_state, query, answer)
 
     if timing is not None:
         timing["total"] = time.perf_counter() - _start
@@ -843,17 +951,20 @@ def ask_stream(
     result = _route_and_retrieve(query, top_k, verbose, resources, conversation_state, timing, usage, tool_trace)
 
     if result.done:
+        if conversation_state is not None:
+            record_turn(conversation_state, query, result.answer)
         yield result.answer
         if timing is not None:
             timing["total"] = time.perf_counter() - _start
         yield {"final": True, "answer": result.answer, "chunks": result.chunks}
         return
 
+    recent_turns = conversation_state.get("recent_turns") if conversation_state is not None else None
     full_text = ""
     with timed(timing, "generation"):
         for piece in generate_answer_lc_stream(
             result.resolved_query, result.chunks, known_facts=result.known_facts,
-            structured_context=result.structured_context, usage_out=usage,
+            structured_context=result.structured_context, usage_out=usage, recent_turns=recent_turns,
         ):
             full_text += piece
             yield piece
@@ -862,11 +973,12 @@ def ask_stream(
     if not result.verdict_mode:
         with timed(timing, "groundedness_check"):
             answer = check_groundedness(answer, result.chunks)
-        if result.structured_answers:
-            answer = "\n\n".join(result.structured_answers) + "\n\n" + answer
+        # See the matching comment in ask() — no raw structured-answer
+        # prepend here either, same reasoning.
 
     if conversation_state is not None:
         answer = check_conversation_consistency(answer, conversation_state)
+        record_turn(conversation_state, query, answer)
 
     if timing is not None:
         timing["total"] = time.perf_counter() - _start

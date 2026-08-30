@@ -199,6 +199,23 @@ def _nearby_same_unit_numbers(
             r"should\s+not\s+exceed|upper\s+limit|daily\s+limit)\s*[:\(]?\s*$", head,
         ):
             continue
+        # A number that is the END of a numeric RANGE ("20-35 g", "20 to
+        # 35 g", "often ranging from 20-35g") describes a general spread or
+        # category comparison, not a re-assertion of the product's own
+        # single flat value — confirmed real false positive 2026-08-30
+        # (surfaced by the always-synthesize refactor producing more
+        # comparative [INTERPRETATION] text): "Dark chocolate typically has
+        # lower sugar than milk chocolate, often ranging from 20-35 g per
+        # 100g, so 43 g is relatively high" flagged "35g" as contradicting
+        # the product's own known 43.0g sugar, even though "35g" was
+        # clearly the upper bound of a comparison range, not a claim about
+        # THIS product. Checks a tight window immediately before the number
+        # for a dash/en-dash/"to" directly preceded by another digit (the
+        # range's lower bound) — deliberately tight so it doesn't suppress
+        # a genuine standalone claim that happens to follow unrelated text
+        # containing a dash elsewhere in the block.
+        if re.search(r"\d\s*(?:[-–—]|to)\s*$", head):
+            continue
         if not any(abs(m.start() - p) <= _PROXIMITY_WINDOW for p in positions):
             continue
 

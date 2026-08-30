@@ -64,6 +64,35 @@ tail_limit_answer = ("[INTERPRETATION] Consuming it every day would contribute a
 check("a guideline number followed by 'limit' (marker AFTER the number) does not false-positive",
       "CONTRADICTS" not in check_conversation_consistency(tail_limit_answer, state))
 
+# --- 2026-08-30: a comparison RANGE's upper bound must not be treated as --
+# --- a re-assertion of the product's own known value -----------------------
+# Real false positive, surfaced live by the always-synthesize refactor
+# (ask_langchain_hybrid.py) producing more comparative [INTERPRETATION]
+# text than before: "Dark chocolate typically has lower sugar than milk
+# chocolate, often ranging from 20-35 g per 100g, so 43 g is relatively
+# high" flagged "35g" as contradicting the product's own known 43.0g sugar,
+# even though "35g" is clearly the upper bound of a comparison range, not a
+# claim about this specific product.
+range_state = _state("total_sugars_g", 43.0)
+range_answer = ("[INTERPRETATION] Dark chocolate typically has lower sugar than milk chocolate, "
+                "often ranging from 20-35 g per 100g, so 43 g is relatively high for a dark-chocolate "
+                "product.")
+check("a comparison range's upper bound ('20-35 g') does not false-positive",
+      "CONTRADICTS" not in check_conversation_consistency(range_answer, range_state))
+
+range_en_dash_answer = ("[INTERPRETATION] Typical dark chocolate ranges from 20–35 g of sugar "
+                         "per 100g, so this product's 43 g is on the higher end.")
+check("the same range check works with an en-dash, not just a hyphen",
+      "CONTRADICTS" not in check_conversation_consistency(range_en_dash_answer, range_state))
+
+# The range exclusion must stay tight — a genuine standalone wrong value
+# elsewhere in the block (no dash/"to" immediately before it) must still
+# be caught.
+range_plus_wrong_answer = ("[INTERPRETATION] Typical dark chocolate ranges from 20-35 g of sugar per "
+                            "100g. [FACT] This product has 50g of added sugars (products.sqlite).")
+check("a genuine wrong value elsewhere in the same answer still gets flagged despite an earlier range",
+      "CONTRADICTS" in check_conversation_consistency(range_plus_wrong_answer, _state("added_sugars_g", 47.4)))
+
 # --- Pre-existing false-positive fixes, re-verified not to have regressed -
 
 per_kg_answer = "[REGULATORY] WHO recommends 0.8g protein per kilogram of body weight daily."
